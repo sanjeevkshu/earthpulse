@@ -33,6 +33,7 @@ content/                     ← all MDX content
   voices/
   take-action/
   pages/                     ← static site pages (About, Contribute, Newsletter, Privacy)
+doc/                         ← authoring guides for content authors (see below)
 src/
   app/                       ← Next.js App Router pages
   components/
@@ -194,6 +195,22 @@ Current pages: `about.mdx` · `contribute.mdx` · `newsletter.mdx` · `privacy.m
 - Multilingual support (Next.js i18n routing)
 - Community article submissions with editorial review workflow
 - Personal carbon footprint calculator widget
+
+---
+
+## Authoring documentation (`doc/`)
+
+The `doc/` folder contains practical guides for **content authors** — people who write MDX files but are not necessarily developers. These docs are the single source of truth for content authoring conventions.
+
+| File | Audience | Covers |
+|------|----------|--------|
+| [`doc/README.md`](./doc/README.md) | All authors | Index, folder map, one-minute publish workflow |
+| [`doc/authoring-articles.md`](./doc/authoring-articles.md) | Article writers | Frontmatter reference, content structure, sources, word count, publish workflow |
+| [`doc/authoring-components.md`](./doc/authoring-components.md) | All authors | `<Tip>`, `<DidYouKnow>`, `<Impact>`, `<Callout>`, `<NewsletterForm>` — usage + live examples |
+| [`doc/authoring-media.md`](./doc/authoring-media.md) | All authors | Finding Unsplash photos, URL format, local images, attribution |
+| [`doc/authoring-static-pages.md`](./doc/authoring-static-pages.md) | Site editors | Editing About, Contribute, Newsletter, Privacy pages |
+
+**For developers:** these docs describe the authored interface of components. When adding a new MDX component, update `doc/authoring-components.md` with its usage and examples before closing the feature. When changing frontmatter fields, update `doc/authoring-articles.md` or `doc/authoring-static-pages.md` accordingly.
 
 ---
 

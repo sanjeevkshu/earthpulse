@@ -74,12 +74,21 @@ export interface HeroMediaEntry {
   label: string;
 }
 
-// Shared reliable MP4 source used across pool entries and pillar pages.
-// Google Cloud Storage public bucket — serves with Access-Control-Allow-Origin: *
-// so cross-origin <video> playback works without CORS errors in all browsers.
-// Replace with your own CDN URL (Cloudinary, Bunny.net, etc.) for production.
+// Shared MP4 source used across pool entries and pillar pages.
+// Source: MDN Web Docs CC0 sample media library.
+//   URL:    https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+//   Size:   ~1.1 MB (fast to buffer)
+//   CORS:   Access-Control-Allow-Origin: * (confirmed)
+//   Licence: CC0 public domain
+//   Content: close-up nature footage of a flower — appropriate for EarthPulse
+//
+// Replace with your own CDN URL (Cloudinary, Bunny.net, self-hosted) for production
+// if you want a longer, higher-resolution nature clip.
+//
+// NOTE: videos.pexels.com and storage.googleapis.com/gtv-videos-bucket both
+// return 403 for cross-origin requests — do not use them as video sources.
 export const NATURE_VIDEO_SRC =
-  'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4';
+  'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
 
 export const HERO_MEDIA_POOL: HeroMediaEntry[] = [
   {

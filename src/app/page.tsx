@@ -15,13 +15,15 @@ export default function HomePage() {
   const latest   = getAllArticles().slice(0, 6);
   return (
     <>
-      <section className="relative min-h-[85vh] flex items-center overflow-hidden">
+      <section className="relative min-h-[85vh] overflow-hidden">
         {/* Media background — video → Unsplash image → CSS gradient (3-layer fallback) */}
         <HeroMedia />
         {/* Dark gradient scrim — always rendered; ensures text legibility regardless of media layer */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" aria-hidden="true" />
-        {/* Content */}
-        <div className="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-24 md:py-32">
+        {/* Content — absolute like all other layers so no flex recalculation can shift it.
+            Section height is defined purely by min-h-[85vh]; overlay just fills it. */}
+        <div className="absolute inset-0 z-10 flex items-center justify-center">
+        <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-24 md:py-32">
           <div className="inline-flex items-center gap-2 text-xs font-medium text-white/90 bg-white/10 border border-white/20 backdrop-blur-sm rounded-full px-3 py-1 mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse"></span>
             Our planet needs informed citizens
@@ -36,6 +38,7 @@ export default function HomePage() {
             <Link href="/our-planet" className="btn-primary text-base py-3 px-6">Start exploring →</Link>
             <Link href="/newsletter" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-white/60 text-white font-medium text-base hover:bg-white/10 transition-colors">Get weekly updates</Link>
           </div>
+        </div>
         </div>
       </section>
 

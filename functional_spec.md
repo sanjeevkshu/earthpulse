@@ -419,11 +419,63 @@ All three components are dark-mode aware via Tailwind `dark:` utilities.
 - The original publication date and correction date should both be recorded
 
 ### 8.3 Content model (MDX frontmatter)
-See README.md for full field specification.
+Full field specification, component reference, and media sourcing guide are in the `doc/` folder. See section 9 below.
+
+### 8.4 Authoring documentation
+The `doc/` folder is the single source of truth for content authors. It is maintained alongside the codebase and updated whenever a component, frontmatter field, or authoring convention changes.
 
 ---
 
-## 9. Accessibility
+## 9. Authoring documentation (`doc/`)
+
+Content authoring guides live in the `doc/` folder alongside the codebase. They cover the full authored interface — frontmatter fields, MDX components, media sourcing, and static page editing.
+
+### 9.1 Document index
+
+| Document | Purpose |
+|----------|---------|
+| `doc/README.md` | Index of all docs; folder map; one-minute publish workflow |
+| `doc/authoring-articles.md` | Writing new articles — frontmatter reference, structure, tags, sources, publishing |
+| `doc/authoring-components.md` | MDX component reference — `<Tip>`, `<DidYouKnow>`, `<Impact>`, `<Callout>`, `<NewsletterForm>` |
+| `doc/authoring-media.md` | Cover images — finding Unsplash photos, URL format, local images, attribution |
+| `doc/authoring-static-pages.md` | Editing About, Contribute, Newsletter, and Privacy pages |
+
+### 9.2 Doc maintenance rules
+
+- When a new MDX component is shipped: add it to `doc/authoring-components.md` before closing the feature
+- When a frontmatter field is added or changed: update `doc/authoring-articles.md` or `doc/authoring-static-pages.md`
+- When a new image CDN is added to `remotePatterns`: update `doc/authoring-media.md`
+- The `doc/` folder is part of the NFR compliance gate — outdated authoring docs are a documentation bug
+
+### 9.3 Component authored interface (summary)
+
+| Component | Syntax | Available in |
+|-----------|--------|-------------|
+| `<Tip>` | `<Tip>Text</Tip>` | Articles + all pages |
+| `<DidYouKnow>` | `<DidYouKnow>Text</DidYouKnow>` | Articles + all pages |
+| `<Impact>` | `<Impact>Text</Impact>` | Articles + all pages |
+| `<Callout>` | `<Callout icon="🔬" title="Title">Text</Callout>` | Static pages primarily |
+| `<NewsletterForm />` | `<NewsletterForm />` | `newsletter.mdx` only |
+
+Full examples with do's and don'ts: see `doc/authoring-components.md`.
+
+### 9.4 Article frontmatter (summary)
+
+| Field | Required | Type | Default |
+|-------|----------|------|---------|
+| `title` | ✅ | string | — |
+| `description` | ✅ | string | — |
+| `date` | ✅ | `YYYY-MM-DD` | — |
+| `author` | ✗ | string | `"EarthPulse Editorial"` |
+| `tags` | ✗ | string[] | `[]` |
+| `featured` | ✗ | boolean | `false` |
+| `coverImage` | ✗ | Unsplash URL | pillar image fallback |
+
+Full field descriptions and cover image URL format: see `doc/authoring-articles.md` and `doc/authoring-media.md`.
+
+---
+
+## 11. Accessibility
 
 The website targets **WCAG 2.1 AA** compliance:
 - All images include descriptive alt text
