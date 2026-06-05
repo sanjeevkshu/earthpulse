@@ -1,14 +1,26 @@
 # EarthPulse — Functional Specification
 
-**Version:** 1.0  
+**Current version:** 2.3.0  
 **Status:** Active  
-**Last updated:** June 2024
+**Last updated:** June 2026
+
+---
+
+## Version history
+
+| Version | Date | Category | Summary |
+|---------|------|----------|---------|
+| v1.0.0 | Jun 2024 | Launch | Initial site — core pages, content library, 6 seed articles, Navbar, Footer, ArticleCard |
+| v2.0.0 | Jun 2025 | Feature | Dark mode toggle — `next-themes`, `ThemeProvider`, `ThemeToggle` in Navbar (desktop + mobile) |
+| v2.1.0 | Jun 2025 | Bugfix | Tailwind v4 dark mode fix — `@custom-variant dark` in `globals.css` to wire `dark:` utilities to class strategy |
+| v2.2.0 | Jun 2026 | Feature | Hero banner (video/image) · pillar contextual banner images · article cover image · MDX callout components |
+| v2.3.0 | Jun 2026 | Fix | Media reliability — Unsplash CDN for all images, 3-layer fallback chain, centralised `mediaConfig.ts`, `HeroMedia` + `BannerImage` components |
 
 ---
 
 ## 1. Purpose and scope
 
-EarthPulse is a public-facing informational website focused on environmental education, ecosystem science, human impact, and sustainability. This document defines what the website does — its functional behaviour, content model, user journeys, and feature set for the initial launch (v1.0) and planned subsequent phases.
+EarthPulse is a public-facing informational website focused on environmental education, ecosystem science, human impact, and sustainability. This document defines what the website does — its functional behaviour, content model, user journeys, and feature set for the initial launch (v1.0.0) and subsequent releases.
 
 ---
 
@@ -77,7 +89,7 @@ Practical guidance for individuals, students, and organisations. Includes ranked
 
 ---
 
-## 5. Feature specification — v1.0
+## 5. Feature specification — v1.0.0 (released Jun 2024)
 
 ### 5.1 Navigation
 - Persistent top navigation bar with links to all six pillars
@@ -134,19 +146,28 @@ Displayed on homepage and pillar index pages. Each card shows:
 
 ---
 
-## 6. Feature specification — v2 (planned)
+## 6. Feature specification — v2 (in progress)
 
-| Feature | Status | Description |
-|---------|--------|-------------|
-| Site search | Planned | Pagefind-powered static search with tag/pillar filtering |
-| Newsletter integration | Planned | Brevo embed with topic preferences |
-| Interactive timeline | Planned | Visual, filterable timeline for Through Time section |
-| Data visualisations | Planned | Embedded charts (CO₂ trends, deforestation rates) |
-| Mega-menu | Planned | Rich pillar navigation with sub-topic links |
-| Dark mode toggle | **Done** | Manual override via toggle in Navbar; defaults to system preference; persisted in localStorage via next-themes |
-| Reading progress bar | Planned | On long-form articles |
+| Feature | Version | Status | Description |
+|---------|---------|--------|-------------|
+| Dark mode toggle | v2.0.0 | ✅ Released | Manual override via toggle in Navbar; defaults to system preference; persisted in localStorage via next-themes |
+| Dark mode Tailwind v4 fix | v2.1.0 | ✅ Released | `@custom-variant dark` override — wires `dark:` utilities to `.dark` class strategy |
+| Homepage hero video/image banner | v2.2.0 | ✅ Released | Full-bleed autoplay video with image fallback and `prefers-reduced-motion` support |
+| Pillar contextual banner images | v2.2.0 | ✅ Released | Full-width banner image per pillar index page |
+| Article cover image | v2.2.0 | ✅ Released | Rendered when `coverImage` is set in MDX frontmatter |
+| MDX callout components | v2.2.0 | ✅ Released | `Tip`, `DidYouKnow`, `Impact` usable in all MDX articles |
+| Reading progress bar | v2.3.0 | 🔲 Planned | Scroll-driven bar on long-form article pages |
+| Site search | v2.4.0 | 🔲 Planned | Pagefind-powered static search with tag/pillar filtering |
+| Newsletter page | v2.4.0 | 🔲 Planned | Brevo embed with topic preference checkboxes |
+| Sitemap | v2.4.0 | 🔲 Planned | `src/app/sitemap.ts` using `getAllArticles()` |
+| robots.txt | v2.4.0 | 🔲 Planned | `src/app/robots.ts` |
+| About page | v2.5.0 | 🔲 Planned | Mission, team, editorial standards |
+| Contribute page | v2.5.0 | 🔲 Planned | How to submit articles or corrections |
+| Interactive timeline | v2.6.0 | 🔲 Planned | Visual, filterable timeline for Through Time section |
+| Data visualisations | v2.6.0 | 🔲 Planned | Embedded charts (CO₂ trends, deforestation rates) |
+| Mega-menu | v2.7.0 | 🔲 Planned | Rich pillar navigation with sub-topic links |
 
-### 6.8 Dark mode toggle (implemented)
+### 6.1 Dark mode toggle — v2.0.0 · v2.1.0 (released Jun 2025)
 
 **Behaviour:**
 - On first visit, the site respects the user's OS-level dark/light preference
@@ -169,7 +190,99 @@ Displayed on homepage and pillar index pages. Each card shows:
 
 ---
 
-## 7. Feature specification — v3 (future)
+### 6.2 Homepage hero video/image banner — v2.2.0 (released Jun 2026)
+
+**Behaviour:**
+- The homepage hero section is a full-bleed, full-height (`min-h-[85vh]`) media background replacing the previous CSS gradient
+- A looping, muted, autoplay video plays continuously; text content is overlaid on a dark gradient scrim
+- Users who have enabled `prefers-reduced-motion` in their OS see a static fallback image instead; the video is CSS-hidden via `motion-reduce:hidden`
+- The same fallback image URL is used as the `poster` attribute so no blank frame ever flashes
+- Headline is `text-white`; subtitle is `text-gray-200`; CTAs are unchanged in structure
+- Stats bar below the hero is unchanged
+
+**Accessibility:**
+- Video and fallback image both carry `aria-hidden="true"` — they are decorative
+- `prefers-reduced-motion` respected at the CSS level; no JavaScript feature detection needed
+
+**Media sources (Pexels, free licence):**
+- Video: `https://videos.pexels.com/video-files/3571264/3571264-uhd_2560_1440_30fps.mp4`
+- Fallback image: `https://images.pexels.com/photos/957024/forest-trees-perspective-bright-957024.jpeg`
+
+**Technical approach:**
+- Static `<img>` (fallback) + `<video>` layered absolutely inside a `relative overflow-hidden` section
+- Tailwind `motion-reduce:hidden` / `motion-safe:hidden` control which element is visible
+- `next.config.ts` updated with `images.pexels.com` and `videos.pexels.com` remote patterns
+
+---
+
+### 6.3 Pillar page contextual banner images — v2.2.0 (released Jun 2026)
+
+**Behaviour:**
+- Each pillar index page (`/our-planet`, `/through-time`, etc.) opens with a full-width banner image relevant to that pillar's theme
+- Banner height: `h-64` on mobile, `h-80` on `md+`
+- A bottom-to-transparent gradient scrim blends the banner into the page background in both light and dark mode
+- The pillar title, icon, and description appear below the banner as before
+
+**Image map (Pexels):**
+
+| Pillar | Image |
+|--------|-------|
+| Our Planet | `pexels-photo-3244513.jpeg` — lush green forest |
+| Through Time | `pexels-photo-1162251.jpeg` — geological layers |
+| Human Footprint | `pexels-photo-929385.jpeg` — industrial landscape |
+| In Action | `pexels-photo-1072824.jpeg` — community action |
+| Voices & Research | `pexels-photo-256541.jpeg` — books / research |
+| Take Action | `pexels-photo-1072179.jpeg` — hands together |
+
+**Technical approach:**
+- `PILLAR_IMAGES` map defined locally in `src/app/[pillar]/page.tsx`
+- `next/image` with `fill` and `objectFit: 'cover'`, `priority` for LCP
+- Scrim: `bg-gradient-to-t from-white dark:from-gray-950 to-transparent`
+
+---
+
+### 6.4 Article page cover image — v2.2.0 (released Jun 2026)
+
+**Behaviour:**
+- When an article's MDX frontmatter includes a `coverImage` field, a full-width hero image is rendered between the breadcrumb and the article header
+- When `coverImage` is absent, the layout is unchanged — no empty space, no placeholder
+- Supports both relative paths (`/images/articles/my-image.jpg`) and absolute URLs (Pexels, etc.)
+
+**Technical approach:**
+- `next/image` with `fill`, `objectFit: 'cover'`, `priority`, inside `relative h-64 md:h-96 rounded-xl` container
+
+---
+
+### 6.5 MDX callout components — v2.2.0 (released Jun 2026)
+
+Three reusable callout boxes available in all MDX articles. Import automatically via `components` prop on `MDXRemote`.
+
+| Component | Icon | Colour | Purpose |
+|-----------|------|--------|---------|
+| `<Tip>` | 💡 | Amber | Practical tip or reader action |
+| `<DidYouKnow>` | 🌍 | Brand teal | Surprising fact or statistic |
+| `<Impact>` | ⚡ | Orange | Scale or consequence of an issue |
+
+**Usage in MDX:**
+```mdx
+<DidYouKnow>
+  The ocean produces **50% of Earth's oxygen**.
+</DidYouKnow>
+
+<Impact>
+  50% of the Great Barrier Reef's shallow corals died in 2016–2017.
+</Impact>
+
+<Tip>
+  Support Marine Protected Areas to protect ocean biodiversity.
+</Tip>
+```
+
+All three components are dark-mode aware via Tailwind `dark:` utilities.
+
+---
+
+## 7. Feature specification — v3.0.0+ (future roadmap)
 
 | Feature | Description |
 |---------|-------------|

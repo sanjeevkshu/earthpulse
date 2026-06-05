@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getAllArticles, getFeaturedArticles, PILLAR_META } from '@/lib/content';
 import ArticleCard from '@/components/article/ArticleCard';
+import HeroMedia from '@/components/ui/HeroMedia';
 
 const stats = [
   { value: '1M+',   label: 'Species at risk of extinction' },
@@ -14,22 +15,26 @@ export default function HomePage() {
   const latest   = getAllArticles().slice(0, 6);
   return (
     <>
-      <section className="relative bg-gradient-to-br from-brand-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-950 dark:to-brand-900 py-24 md:py-32 overflow-hidden">
-        <div className="absolute inset-0 opacity-5 pointer-events-none select-none text-[18rem] flex items-center justify-center">🌍</div>
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 text-xs font-medium text-brand-600 dark:text-brand-300 bg-brand-50 dark:bg-brand-900 border border-brand-200 dark:border-brand-700 rounded-full px-3 py-1 mb-6">
+      <section className="relative min-h-[85vh] flex items-center overflow-hidden">
+        {/* Media background — video → Unsplash image → CSS gradient (3-layer fallback) */}
+        <HeroMedia />
+        {/* Dark gradient scrim — always rendered; ensures text legibility regardless of media layer */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" aria-hidden="true" />
+        {/* Content */}
+        <div className="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-24 md:py-32">
+          <div className="inline-flex items-center gap-2 text-xs font-medium text-white/90 bg-white/10 border border-white/20 backdrop-blur-sm rounded-full px-3 py-1 mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse"></span>
             Our planet needs informed citizens
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 leading-tight">
-            The living Earth,<br/><span className="text-brand-400">explained.</span>
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 leading-tight text-white">
+            The living Earth,<br/><span className="text-brand-300">explained.</span>
           </h1>
-          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-lg md:text-xl text-gray-200 max-w-2xl mx-auto mb-10 leading-relaxed">
             From the deep ocean to the atmosphere — explore ecosystems, understand human impact, and discover what governments, scientists, and communities are doing to protect life on Earth.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/our-planet" className="btn-primary text-base py-3 px-6">Start exploring →</Link>
-            <Link href="/newsletter" className="btn-outline text-base py-3 px-6">Get weekly updates</Link>
+            <Link href="/newsletter" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-white/60 text-white font-medium text-base hover:bg-white/10 transition-colors">Get weekly updates</Link>
           </div>
         </div>
       </section>

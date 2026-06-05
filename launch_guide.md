@@ -1,5 +1,8 @@
 # EarthPulse — Local setup and launch guide
 
+**Current version:** v2.2.0  
+**Last updated:** Jun 2026
+
 Follow these steps exactly. After step 4 you will have a running site at `localhost:3000`. After step 6 it will be live on the internet.
 
 ---
@@ -16,6 +19,7 @@ npx create-next-app@latest earthpulse \
 cd earthpulse
 npm install next-mdx-remote gray-matter reading-time date-fns
 npm install @tailwindcss/typography
+npm install next-themes
 npm install -D @types/node
 ```
 
@@ -53,21 +57,27 @@ earthpulse/
 │
 ├── src/
 │   ├── app/
-│   │   ├── globals.css                           ← artifact: src/app/globals.css
-│   │   ├── layout.tsx                            ← artifact: src/app/layout.tsx
-│   │   ├── page.tsx                              ← artifact: src/app/page.tsx
+│   │   ├── globals.css                           ← includes @custom-variant dark for next-themes
+│   │   ├── layout.tsx                            ← wraps body in ThemeProvider
+│   │   ├── page.tsx                              ← homepage with video hero banner
 │   │   └── [pillar]/
-│   │       ├── page.tsx                          ← artifact: src/app/[pillar]/page.tsx
+│   │       ├── page.tsx                          ← pillar index with contextual banner image
 │   │       └── [slug]/
-│   │           └── page.tsx                      ← artifact: src/app/[pillar]/[slug]/page.tsx
+│   │           └── page.tsx                      ← article page with cover image + callout components
 │   ├── components/
 │   │   ├── layout/
-│   │   │   ├── Navbar.tsx                        ← artifact: Navbar.tsx
-│   │   │   └── Footer.tsx                        ← artifact: Footer.tsx
+│   │   │   ├── Navbar.tsx                        ← responsive nav with ThemeToggle
+│   │   │   ├── Footer.tsx
+│   │   │   └── ThemeProvider.tsx                 ← next-themes provider (v2)
+│   │   ├── ui/
+│   │   │   └── ThemeToggle.tsx                   ← sun/moon toggle button (v2)
 │   │   └── article/
-│   │       └── ArticleCard.tsx                   ← artifact: ArticleCard.tsx
+│   │       ├── ArticleCard.tsx
+│   │       ├── Tip.tsx                           ← amber callout box (v2)
+│   │       ├── DidYouKnow.tsx                    ← teal callout box (v2)
+│   │       └── Impact.tsx                        ← orange callout box (v2)
 │   └── lib/
-│       └── content.ts                            ← artifact: src/lib/content.ts
+│       └── content.ts
 │
 └── public/
     └── images/                                   ← empty for now; add images here
@@ -96,7 +106,7 @@ You should see:
 ```bash
 git init
 git add .
-git commit -m "Initial commit — EarthPulse v1.0"
+git commit -m "Initial commit — EarthPulse v2.2.0"
 ```
 
 ---
@@ -129,6 +139,54 @@ git push -u origin main
 3. Copy the DNS records Vercel provides
 4. In Porkbun → DNS settings → add those records
 5. SSL certificate is provisioned automatically — takes ~5 minutes
+
+---
+
+## Features active in this release (v2.2.0)
+
+All features below ship in a fresh install. Earlier version tags show when each was introduced.
+
+| Feature | Version | Where |
+|---------|---------|-------|
+| Dark mode toggle | v2.0.0 | Navbar — desktop right side and beside mobile hamburger |
+| Tailwind v4 dark fix | v2.1.0 | `src/app/globals.css` — `@custom-variant dark` |
+| Homepage video hero | v2.2.0 | `src/app/page.tsx` — Pexels forest video with static fallback |
+| Pillar banner images | v2.2.0 | `src/app/[pillar]/page.tsx` — one Pexels image per pillar |
+| Article cover image | v2.2.0 | Rendered automatically when `coverImage` is set in MDX frontmatter |
+| Callout components | v2.2.0 | `<Tip>`, `<DidYouKnow>`, `<Impact>` — usable in any `.mdx` file |
+
+### Using callout components in MDX articles
+
+```mdx
+<DidYouKnow>
+  Write a surprising fact here — supports **bold** and _italic_ Markdown.
+</DidYouKnow>
+
+<Impact>
+  Describe scale or consequence. Numbers and **bold** work here too.
+</Impact>
+
+<Tip>
+  Practical suggestion for the reader. Link to external resources if relevant.
+</Tip>
+```
+
+### Adding a cover image to an article
+
+Set `coverImage` in the frontmatter — accepts relative paths or absolute URLs:
+
+```yaml
+---
+title: "My article"
+coverImage: "https://images.pexels.com/photos/XXXXXXX/pexels-photo-XXXXXXX.jpeg?auto=compress&cs=tinysrgb&w=1920"
+---
+```
+
+Or for local images placed in `public/images/articles/`:
+
+```yaml
+coverImage: "/images/articles/my-image.jpg"
+```
 
 ---
 
