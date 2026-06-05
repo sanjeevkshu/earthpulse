@@ -136,15 +136,35 @@ Displayed on homepage and pillar index pages. Each card shows:
 
 ## 6. Feature specification — v2 (planned)
 
-| Feature | Description |
-|---------|-------------|
-| Site search | Pagefind-powered static search with tag/pillar filtering |
-| Newsletter integration | Brevo embed with topic preferences |
-| Interactive timeline | Visual, filterable timeline for Through Time section |
-| Data visualisations | Embedded charts (CO₂ trends, deforestation rates) |
-| Mega-menu | Rich pillar navigation with sub-topic links |
-| Dark mode toggle | Manual override (currently follows system preference) |
-| Reading progress bar | On long-form articles |
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Site search | Planned | Pagefind-powered static search with tag/pillar filtering |
+| Newsletter integration | Planned | Brevo embed with topic preferences |
+| Interactive timeline | Planned | Visual, filterable timeline for Through Time section |
+| Data visualisations | Planned | Embedded charts (CO₂ trends, deforestation rates) |
+| Mega-menu | Planned | Rich pillar navigation with sub-topic links |
+| Dark mode toggle | **Done** | Manual override via toggle in Navbar; defaults to system preference; persisted in localStorage via next-themes |
+| Reading progress bar | Planned | On long-form articles |
+
+### 6.8 Dark mode toggle (implemented)
+
+**Behaviour:**
+- On first visit, the site respects the user's OS-level dark/light preference
+- A toggle button in the Navbar allows manual override at any time
+- The chosen preference is persisted in `localStorage` and survives page refresh and navigation
+- On mobile, the toggle appears beside the hamburger menu so it is always accessible
+- The toggle icon switches between a sun (dark mode active) and a moon (light mode active)
+
+**Accessibility:**
+- `aria-label` on the toggle button updates dynamically to reflect current state
+- Readable by screen readers
+
+**Technical approach:**
+- `next-themes` package (`ThemeProvider` wrapping the app body, `attribute="class"`, `enableSystem`)
+- New `ThemeProvider` client component wraps layout body
+- New `ThemeToggle` client component renders the icon button using `useTheme()` hook
+- Hydration-safe: toggle renders a placeholder on the server, real button after mount, preventing flicker
+- `suppressHydrationWarning` on `<html>` tag handles server/client theme class mismatch
 
 ---
 

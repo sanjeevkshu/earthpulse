@@ -11,7 +11,7 @@ It provides full project context so Claude Code can continue development without
 
 **EarthPulse** is an open-source, content-first environmental education website.
 **Stack:** Next.js 14 (App Router) · TypeScript · Tailwind CSS · MDX · Vercel
-**Repo:** https://github.com/yourusername/earthpulse *(update this)*
+**Repo:** https://github.com/sanjeevkshu/earthpulse *(update this)*
 **Live site:** https://earthpulse.org *(once deployed)*
 
 ---
@@ -112,7 +112,7 @@ coverImage: "/images/articles/my-image.jpg"   # optional
 | Newsletter page | Brevo embed, topic preference checkboxes |
 | Sitemap | `src/app/sitemap.ts` using `getAllArticles()` |
 | robots.txt | `src/app/robots.ts` |
-| Dark mode toggle | `next-themes` package, persist in localStorage |
+| ~~Dark mode toggle~~ | ✅ Done — `next-themes`, `ThemeProvider`, `ThemeToggle` in Navbar (desktop + mobile) |
 | Reading progress bar | Client component, scroll event listener, on article pages |
 | About page | Mission, team, editorial standards |
 | Contribute page | How to submit articles or corrections |
