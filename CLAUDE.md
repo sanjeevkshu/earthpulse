@@ -10,7 +10,7 @@ It provides full project context so Claude Code can continue development without
 ## Project summary
 
 **EarthPulse** is an open-source, content-first environmental education website.
-**Current version:** v2.3.0 (Jun 2026)
+**Current version:** v2.3.2 (Jun 2026)
 **Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 · MDX · Vercel
 **Repo:** https://github.com/sanjeevkshu/earthpulse *(update this)*
 **Live site:** https://earthpulse.org *(once deployed)*
@@ -62,9 +62,18 @@ date: "2024-06-01"          # ISO format
 author: "Author Name"        # defaults to "EarthPulse Editorial"
 tags: ["tag1", "tag2"]
 featured: false              # true = shown in homepage featured section
-coverImage: "/images/articles/my-image.jpg"   # optional
+coverImage: "https://images.unsplash.com/photo-{ID}?auto=format&fit=crop&w=1920&q=80"
 ---
 ```
+
+**`coverImage` convention (v2.3.2+):**
+- Recommended on all new articles — all 6 seed articles carry one
+- If omitted, the article page automatically falls back to the pillar's contextual banner image so every article always has a visual header
+- Use Unsplash CDN URLs (`images.unsplash.com`) — hotlinking permitted; routes through Next.js image proxy
+- Choose an image specific to the article's subject — distinct from its pillar banner for visual variety
+- Include `?auto=format&fit=crop&w=1920&q=80` to cap source resolution at 1920px
+- Cover images are CONTENT metadata — they live in MDX frontmatter, not in `mediaConfig.ts`
+- Fallback chain: `coverImage` → pillar image → pillar CSS gradient (all handled automatically)
 
 ---
 
@@ -99,6 +108,8 @@ coverImage: "/images/articles/my-image.jpg"   # optional
 | v2.1.0 | Jun 2025 | Tailwind v4 dark mode bugfix — `@custom-variant dark` in `globals.css` | ✅ |
 | v2.2.0 | Jun 2026 | Hero video/image banner · pillar banner images · article cover image · MDX callout components | ✅ |
 | v2.3.0 | Jun 2026 | Media reliability fix — Unsplash CDN, 3-layer fallback, `mediaConfig.ts`, `HeroMedia`, `BannerImage` | ✅ |
+| v2.3.1 | Jun 2026 | Content patch — `coverImage` added to all 6 seed articles; `mediaConfig.ts` scope boundary documented | ✅ |
+| v2.3.2 | Jun 2026 | Fallback — article cover auto-fills from pillar image when `coverImage` frontmatter is absent | ✅ |
 | v2.4.0 | — | Reading progress bar on article pages | 🔲 |
 | v2.4.0 | — | Site search (Pagefind) · Newsletter page · Sitemap · robots.txt | 🔲 |
 | v2.5.0 | — | About page · Contribute page | 🔲 |

@@ -1,5 +1,5 @@
 /**
- * EarthPulse — Centralised media configuration (v2.3.0)
+ * EarthPulse — Centralised media configuration (v2.3.1)
  *
  * ALL external image and video URLs live here. One place to update if a
  * source changes or a higher-quality alternative becomes available.
@@ -22,6 +22,21 @@
  *     with your own MP4 URL (Cloudinary free tier, Bunny.net, etc.).
  *
  * Fallback gradient colours match each pillar's design token.
+ *
+ * ── Scope of this file ─────────────────────────────────────────────────────
+ * This file manages STRUCTURAL media — images and video that are part of the
+ * site's UI design (hero section, pillar index banners).
+ *
+ * CONTENT media (article cover images) live in MDX frontmatter as `coverImage`
+ * fields. That is the correct location because:
+ *   - Cover images are article-specific editorial choices, not UI design
+ *   - Authors control them alongside the article text
+ *   - They travel with the content in Git, not with the component code
+ *
+ * When a new article is authored, add a `coverImage` Unsplash URL to its
+ * frontmatter following the pattern in existing seed articles. The
+ * BannerImage component in [slug]/page.tsx renders it automatically and
+ * falls back to the pillar gradient if the URL is unreachable.
  */
 
 import type { Pillar } from '@/lib/content';

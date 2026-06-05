@@ -52,18 +52,20 @@ export default async function ArticlePage({ params }: Props) {
         <span className="text-gray-600 dark:text-gray-300 truncate">{article.title}</span>
       </nav>
 
-      {/* Cover image — rendered when coverImage is set in frontmatter.
+      {/* Cover image — 3-layer fallback chain:
+          1. article.coverImage  — author's specific image from frontmatter
+          2. PILLAR_IMAGES[pillar].src — pillar contextual image when coverImage is absent
+          3. PILLAR_IMAGES[pillar].gradient — CSS fallback inside BannerImage onError
+          Authors can always override by setting coverImage in frontmatter.
           priority={false}: sits below the breadcrumb nav, not the LCP element.
           showScrim={false}: rounded-xl card style; no page-blend scrim needed. */}
-      {article.coverImage && (
-        <BannerImage
-          src={article.coverImage}
-          gradientFallback={PILLAR_IMAGES[pillar].gradient}
-          className="relative w-full h-64 md:h-96 overflow-hidden rounded-xl mb-8"
-          priority={false}
-          showScrim={false}
-        />
-      )}
+      <BannerImage
+        src={article.coverImage || PILLAR_IMAGES[pillar].src}
+        gradientFallback={PILLAR_IMAGES[pillar].gradient}
+        className="relative w-full h-64 md:h-96 overflow-hidden rounded-xl mb-8"
+        priority={false}
+        showScrim={false}
+      />
 
       {/* Article header */}
       <header className="mb-10">

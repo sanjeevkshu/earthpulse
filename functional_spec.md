@@ -1,6 +1,6 @@
 # EarthPulse — Functional Specification
 
-**Current version:** 2.3.0  
+**Current version:** 2.3.2  
 **Status:** Active  
 **Last updated:** June 2026
 
@@ -15,6 +15,8 @@
 | v2.1.0 | Jun 2025 | Bugfix | Tailwind v4 dark mode fix — `@custom-variant dark` in `globals.css` to wire `dark:` utilities to class strategy |
 | v2.2.0 | Jun 2026 | Feature | Hero banner (video/image) · pillar contextual banner images · article cover image · MDX callout components |
 | v2.3.0 | Jun 2026 | Fix | Media reliability — Unsplash CDN for all images, 3-layer fallback chain, centralised `mediaConfig.ts`, `HeroMedia` + `BannerImage` components |
+| v2.3.1 | Jun 2026 | Content | `coverImage` frontmatter added to all 6 seed articles; content/structural media boundary documented |
+| v2.3.2 | Jun 2026 | Fix | Article cover auto-fallback — pillar image used when `coverImage` is absent; every article always has a visual header |
 
 ---
 
@@ -114,6 +116,7 @@ Practical guidance for individuals, students, and organisations. Includes ranked
 ### 5.4 Article pages
 - Full article rendered from MDX
 - Breadcrumb navigation
+- Cover image (full-width, rounded) rendered between breadcrumb and header when `coverImage` frontmatter is set — all 6 seed articles carry one as of v2.3.1
 - Article metadata: author, date, reading time
 - Tag pills (linked to tag pages)
 - Pillar badge
@@ -241,15 +244,39 @@ Displayed on homepage and pillar index pages. Each card shows:
 
 ---
 
-### 6.4 Article page cover image — v2.2.0 (released Jun 2026)
+### 6.4 Article page cover image — v2.2.0 · v2.3.1 · v2.3.2 (released Jun 2026)
 
 **Behaviour:**
-- When an article's MDX frontmatter includes a `coverImage` field, a full-width hero image is rendered between the breadcrumb and the article header
-- When `coverImage` is absent, the layout is unchanged — no empty space, no placeholder
-- Supports both relative paths (`/images/articles/my-image.jpg`) and absolute URLs (Pexels, etc.)
+- Every article page shows a full-width cover image between the breadcrumb and the article header
+- **Source priority (resolved at render time):**
+  1. `coverImage` from the article's MDX frontmatter — author's specific choice
+  2. The pillar's contextual banner image — automatic fallback when `coverImage` is absent
+  3. The pillar's CSS gradient — `BannerImage` `onError` handler if the image URL fails
+- Authors never need to set `coverImage` for the page to look correct; setting it gives per-article visual identity
+- Supports Unsplash CDN URLs (primary), relative paths (`/images/articles/my-image.jpg`), or any absolute URL listed in `next.config.ts` `remotePatterns`
+- All 6 seed articles carry article-specific `coverImage` values as of v2.3.1
+
+**Cover images assigned (v2.3.1):**
+
+| Article | Pillar | Image subject |
+|---------|--------|--------------|
+| The ocean: Earth's life-support system | Our Planet | Turquoise ocean surface |
+| 4.5 billion years in brief | Through Time | Earth from space |
+| How we feed the world | Human Footprint | Golden wheat field |
+| 30x30: protect a third of the planet | In Action | Pristine mountain wilderness |
+| What is the biodiversity crisis? | Voices & Research | Wild animal in natural habitat |
+| What you can actually do | Take Action | Individual sustainable action |
+
+**Content vs. structural media boundary:**
+- Cover images are **content metadata** — they live in MDX frontmatter alongside the article text
+- Structural/UI media (hero video, pillar banners) live in `src/lib/mediaConfig.ts`
+- This separation means authors control cover images via Git without touching component code
 
 **Technical approach:**
-- `next/image` with `fill`, `objectFit: 'cover'`, `priority`, inside `relative h-64 md:h-96 rounded-xl` container
+- `BannerImage` component renders the image via Next.js `/_next/image` proxy (no CORS/referrer issues)
+- `priority={false}` — cover image is below the breadcrumb nav, not the page LCP element
+- `showScrim={false}` — rounded card style does not need a page-blend gradient
+- Falls back to the pillar's CSS gradient if the URL is unreachable
 
 ---
 
