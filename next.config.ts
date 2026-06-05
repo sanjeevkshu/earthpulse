@@ -8,12 +8,14 @@ const nextConfig: NextConfig = {
       // Unsplash CDN — primary source for all banner / hero images.
       // Hotlinking explicitly permitted by Unsplash licence.
       { protocol: 'https', hostname: 'images.unsplash.com' },
-      // Pexels images — allowed for article coverImage frontmatter fields.
+      // Pexels images — reserved safety net; no current content uses Pexels images
+      // but kept so any author who supplies a Pexels coverImage URL is not blocked.
       { protocol: 'https', hostname: 'images.pexels.com' },
       // NOTE: videos.pexels.com is intentionally NOT listed here.
-      // MP4 video files cannot be processed by Next.js Image optimisation.
-      // The Pexels video URL in HERO_MEDIA.videoSrc is fetched directly by
-      // the browser <video> element, not through the /_next/image proxy.
+      // MP4 files cannot be processed by Next.js Image optimisation.
+      // Videos are fetched directly by the browser <video> element from the
+      // video CDN (currently storage.googleapis.com) — not proxied through /_next/image.
+      // The video CDN must serve Access-Control-Allow-Origin: * independently.
     ],
   },
 };

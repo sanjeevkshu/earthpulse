@@ -1,0 +1,106 @@
+---
+title: "Write for EarthPulse"
+description: "We welcome contributions from researchers, journalists, educators, practitioners, and knowledgeable citizens. If you have expertise and a story worth telling, we want to hear from you."
+date: "2024-06-01"
+icon: "✍️"
+coverImage: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1920&q=80"
+---
+
+## What we publish
+
+We cover all six content pillars — Our Planet, Through Time, Human Footprint, In Action, Voices & Research, and Take Action. Within those, we publish:
+
+- **Explainers** — clear, well-sourced breakdowns of complex scientific topics
+- **Research summaries** — accessible summaries of recent peer-reviewed papers
+- **Initiative profiles** — case studies of conservation, policy, or community projects in action
+- **Opinion and analysis** — evidence-based perspectives on environmental policy, clearly labelled
+- **Practical guides** — actionable, researched guidance for individuals, educators, or organisations
+- **Interviews** — conversations with scientists, practitioners, and policymakers on the front lines
+
+## How to submit
+
+<Callout icon="01" title="Pitch your idea">
+  Open a GitHub issue titled "Article pitch: [your topic]" or email us at editorial@earthpulse.org. Include a one-paragraph summary, the pillar it fits, and the primary sources you plan to use. We respond within 5 working days.
+</Callout>
+
+<Callout icon="02" title="Write your draft">
+  Once your pitch is accepted, write your article as a `.mdx` file following the content template below. Aim for 600–1,500 words. Include a Sources section at the end with links to all primary references.
+</Callout>
+
+<Callout icon="03" title="Submit a pull request">
+  Fork the EarthPulse GitHub repository, add your `.mdx` file to the correct content folder, and open a pull request. Our editorial team will review for accuracy, tone, and style.
+</Callout>
+
+<Callout icon="04" title="Review and publish">
+  We may suggest edits for clarity or accuracy. Once agreed, we merge the PR and your article goes live on the next Vercel deploy — usually within minutes.
+</Callout>
+
+## Editorial guidelines
+
+### Lead with evidence
+
+Every factual claim must be traceable to a primary source. Cite sources inline or in a Sources section at the end. Do not rely on secondary aggregator sites as your primary reference.
+
+### Write for a curious non-specialist
+
+Our readers are intelligent and engaged, but they may not have a science background. Avoid jargon without explanation, and use concrete examples and analogies to make abstract ideas tangible.
+
+### Be honest about uncertainty
+
+Science is not always settled. If a claim is contested, say so. If the data shows a range of estimates, give the range. Intellectual honesty builds reader trust more than false certainty.
+
+### Distinguish science from policy
+
+The science of climate change is consensus. What to do about it is a matter of ongoing debate. Keep these two domains clearly separated in your writing.
+
+### Include something actionable
+
+Wherever possible, give readers something concrete to do with what they have just learned — a question to ask their representative, an organisation to support, a behaviour to consider.
+
+### Avoid doom and false hope equally
+
+The environmental situation is serious. It is also not hopeless. We do not publish catastrophist content that leaves readers paralysed, nor green-washing that understates the challenge. Aim for accurate, motivating honesty.
+
+## Article template
+
+Create your file as `content/[pillar]/your-article-slug.mdx` using this frontmatter:
+
+```mdx
+---
+title: "Your article title"
+description: "One sentence summary for SEO and article cards."
+date: "2024-06-01"
+author: "Your Name"
+tags: ["climate", "forests"]
+featured: false
+coverImage: "https://images.unsplash.com/photo-{ID}?auto=format&fit=crop&w=1920&q=80"
+---
+
+## Introduction
+
+Your article content in Markdown...
+
+<DidYouKnow>
+  A surprising fact related to your topic.
+</DidYouKnow>
+
+<Impact>
+  The scale or consequence of the issue you are covering.
+</Impact>
+
+<Tip>
+  A practical action readers can take.
+</Tip>
+
+## Sources
+
+- [Source name](https://link-to-source.org)
+- [Source name](https://link-to-source.org)
+```
+
+## Ready to pitch?
+
+Open a GitHub issue or send us an email with your topic idea. We look forward to reading it.
+
+[Open a GitHub issue →](https://github.com/yourusername/earthpulse/issues/new)  
+[Email editorial@earthpulse.org](mailto:editorial@earthpulse.org)

@@ -10,7 +10,7 @@ It provides full project context so Claude Code can continue development without
 ## Project summary
 
 **EarthPulse** is an open-source, content-first environmental education website.
-**Current version:** v2.3.2 (Jun 2026)
+**Current version:** v2.5.0 (Jun 2026)
 **Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 · MDX · Vercel
 **Repo:** https://github.com/sanjeevkshu/earthpulse *(update this)*
 **Live site:** https://earthpulse.org *(once deployed)*
@@ -25,27 +25,31 @@ It provides full project context so Claude Code can continue development without
 - No CMS — content is authored directly as Markdown in Git
 
 ```
-content/           ← all articles as .mdx files
-  our-planet/
+content/                     ← all MDX content
+  our-planet/                ← pillar articles
   through-time/
   human-footprint/
   in-action/
   voices/
   take-action/
+  pages/                     ← static site pages (About, Contribute, Newsletter, Privacy)
 src/
-  app/             ← Next.js App Router pages
+  app/                       ← Next.js App Router pages
   components/
-    layout/        ← Navbar, Footer
-    article/       ← ArticleCard
-    ui/            ← shared primitives (growing)
+    layout/                  ← Navbar, Footer, ThemeProvider
+    article/                 ← ArticleCard, Tip, DidYouKnow, Impact, Callout
+    ui/                      ← ThemeToggle, HeroMedia, BannerImage, PageHero, NewsletterForm
   lib/
-    content.ts     ← MDX loader, getAllArticles, getArticle, PILLAR_META
+    content.ts               ← MDX loader, getAllArticles, getArticle, PILLAR_META
+    pages.ts                 ← static page loader, getStaticPage
+    mediaConfig.ts           ← all image/video URLs, resolveCoverImage
 public/
   images/
-CLAUDE.md          ← this file
+CLAUDE.md                    ← this file
 README.md
-FUNCTIONAL_SPEC.md
-TECHNICAL_DESIGN.md
+functional_spec.md
+technical_design.md
+launch_guide.md
 ```
 
 ---
@@ -74,6 +78,27 @@ coverImage: "https://images.unsplash.com/photo-{ID}?auto=format&fit=crop&w=1920&
 - Include `?auto=format&fit=crop&w=1920&q=80` to cap source resolution at 1920px
 - Cover images are CONTENT metadata — they live in MDX frontmatter, not in `mediaConfig.ts`
 - Fallback chain: `coverImage` → pillar image → pillar CSS gradient (all handled automatically)
+
+---
+
+## Static page content model (`content/pages/`)
+
+Pages in `content/pages/` are authored in MDX and rendered with `PageHero` + `MDXRemote`, exactly like pillar article pages. The loader is `src/lib/pages.ts`.
+
+Frontmatter fields:
+```yaml
+title: "Page title"
+description: "One sentence — used as subtitle on PageHero and in <meta description>"
+date: "2024-06-01"      # ISO — shown as "Last updated" on legal pages
+icon: "🌿"              # Emoji badge overlaid on the PageHero
+coverImage: "https://images.unsplash.com/photo-{ID}?auto=format&fit=crop&w=1920&q=80"
+```
+
+Design config (gradient, videoSrc) lives in `PAGE_CONFIG` inside `pages.ts` — not in frontmatter.
+
+Available MDX components: `Tip`, `DidYouKnow`, `Impact`, `Callout`, `NewsletterForm` (newsletter page only).
+
+Current pages: `about.mdx` · `contribute.mdx` · `newsletter.mdx` · `privacy.mdx`
 
 ---
 
@@ -110,24 +135,27 @@ coverImage: "https://images.unsplash.com/photo-{ID}?auto=format&fit=crop&w=1920&
 | v2.3.0 | Jun 2026 | Media reliability fix — Unsplash CDN, 3-layer fallback, `mediaConfig.ts`, `HeroMedia`, `BannerImage` | ✅ |
 | v2.3.1 | Jun 2026 | Content patch — `coverImage` added to all 6 seed articles; `mediaConfig.ts` scope boundary documented | ✅ |
 | v2.3.2 | Jun 2026 | Fallback — article cover auto-fills from pillar image when `coverImage` frontmatter is absent | ✅ |
-| v2.4.0 | — | Reading progress bar on article pages | 🔲 |
-| v2.4.0 | — | Site search (Pagefind) · Newsletter page · Sitemap · robots.txt | 🔲 |
-| v2.5.0 | — | About page · Contribute page | 🔲 |
+| v2.4.0 | Jun 2026 | UX elevation — session-rotating hero pool · PageHero (full-bleed, hybrid video/image, overlay title) · tag-based `resolveCoverImage` | ✅ |
+| v2.5.0 | Jun 2026 | Static pages → MDX — About, Contribute, Newsletter, Privacy moved to `content/pages/`; new `pages.ts` loader; `Callout` + `NewsletterForm` components | ✅ |
+| v2.6.0 | — | Reading progress bar on article pages | 🔲 |
+| v2.7.0 | — | Site search (Pagefind) · Sitemap · robots.txt | 🔲 |
+| v2.8.0 | — | Interactive timeline · Data visualisations | 🔲 |
+| v2.9.0 | — | Mega-menu | 🔲 |
 | v3.0.0 | — | User accounts · Comments · Live data dashboards · Multilingual | 🔲 |
 
 ---
 
-## Planned features — next up (v2.3.0+)
+## Planned features — next up (v2.6.0+)
 
 | Feature | Target | Notes |
 |---------|--------|-------|
-| Reading progress bar | v2.4.0 | Client component, scroll event listener, on article pages |
-| Site search | v2.5.0 | Pagefind — runs at build time, zero server needed |
-| Newsletter page | v2.5.0 | Brevo embed, topic preference checkboxes |
-| Sitemap | v2.5.0 | `src/app/sitemap.ts` using `getAllArticles()` |
-| robots.txt | v2.5.0 | `src/app/robots.ts` |
-| About page | v2.6.0 | Mission, team, editorial standards |
-| Contribute page | v2.6.0 | How to submit articles or corrections |
+| Reading progress bar | v2.6.0 | Client component, scroll event listener, on article pages |
+| Site search | v2.7.0 | Pagefind — runs at build time, zero server needed |
+| Sitemap | v2.7.0 | `src/app/sitemap.ts` using `getAllArticles()` |
+| robots.txt | v2.7.0 | `src/app/robots.ts` |
+| Interactive timeline | v2.8.0 | Visual, filterable timeline for Through Time section |
+| Data visualisations | v2.8.0 | Embedded charts (CO₂ trends, deforestation rates) |
+| Mega-menu | v2.9.0 | Rich pillar navigation with sub-topic links |
 
 ## Component inventory (`src/components/`)
 
@@ -138,12 +166,23 @@ coverImage: "https://images.unsplash.com/photo-{ID}?auto=format&fit=crop&w=1920&
 | `layout/ThemeProvider.tsx` | ThemeProvider | v2.0.0 | `next-themes` wrapper, class strategy |
 | `ui/ThemeToggle.tsx` | ThemeToggle | v2.0.0 | Sun/moon icon button, hydration-safe |
 | `article/ArticleCard.tsx` | ArticleCard | v1.0.0 | Pillar badge, tags, reading time |
-| `lib/mediaConfig.ts` | — | v2.3.0 | Centralised media URL config — all image/video sources; swap URLs here |
-| `ui/HeroMedia.tsx` | HeroMedia | v2.3.0 | Hero video → Unsplash image → CSS gradient (3-layer fallback, client) |
-| `ui/BannerImage.tsx` | BannerImage | v2.3.0 | Pillar/article banner — next/image → CSS gradient fallback (client) |
+| `ui/HeroMedia.tsx` | HeroMedia | v2.3.0 | Homepage hero — session-rotating pool, video→image→gradient fallback (client) |
+| `ui/BannerImage.tsx` | BannerImage | v2.3.0 | Generic next/image + gradient fallback — utility; superseded by PageHero for full-bleed |
+| `ui/PageHero.tsx` | PageHero | v2.4.0 | Full-bleed hybrid hero — static image, lazy video on hover/touch, IntersectionObserver, overlay title/breadcrumb |
+| `ui/ThemeToggle.tsx` | ThemeToggle | v2.0.0 | Sun/moon icon button, hydration-safe |
+| `ui/NewsletterForm.tsx` | NewsletterForm | v2.5.0 | Topics grid + Brevo embed placeholder (client); registered in newsletter.mdx |
 | `article/Tip.tsx` | Tip | v2.2.0 | Amber callout box — 💡 |
 | `article/DidYouKnow.tsx` | DidYouKnow | v2.2.0 | Brand-teal callout box — 🌍 |
 | `article/Impact.tsx` | Impact | v2.2.0 | Orange callout box — ⚡ |
+| `article/Callout.tsx` | Callout | v2.5.0 | Generic icon+title+body card — used in static MDX pages |
+
+## Library inventory (`src/lib/`)
+
+| File | Since | Purpose |
+|------|-------|---------|
+| `content.ts` | v1.0.0 | MDX loader for pillar articles — `getAllArticles()`, `getArticle()`, `PILLAR_META` |
+| `mediaConfig.ts` | v2.3.0 | All image/video URLs — `PILLAR_IMAGES`, `HERO_MEDIA_POOL`, `ARTICLE_MEDIA_TAGS`, `resolveCoverImage()`, `NATURE_VIDEO_SRC` |
+| `pages.ts` | v2.5.0 | MDX loader for `content/pages/` — `getStaticPage()`, `getAllPageSlugs()`, `PAGE_CONFIG` |
 
 ---
 
@@ -184,17 +223,20 @@ a specific past failure — they are not theoretical.
 
 ### Performance
 
-**Images**
+**Images — CORS does not apply to the browser**
 - Every `<Image fill>` **must** have `sizes="100vw"` (or a more specific value for constrained containers). Without it Next.js cannot generate a correct responsive srcset and may serve an oversized image to mobile viewports.
 - `priority` must only be set on images that are the Largest Contentful Paint (LCP) candidate — typically the first visible image above the fold on a given page. Every other image must not have `priority` (or must explicitly pass `priority={false}`).
-- Never use a raw `<img>` for external URLs. Always use `next/image`, which proxies through `/_next/image` server-side. Raw `<img>` sends the page's `Referer` header to the CDN, which can trigger hotlink blocks (this was the root cause of the broken Pexels images in v2.2.0).
-- All external image hostnames must be listed in `next.config.ts` `images.remotePatterns` **before** being used in `<Image>`. Only image CDNs go here — video CDN hostnames (`.mp4` sources) are never valid `remotePatterns` entries.
+- Never use a raw `<img>` for external URLs. Always use `next/image`, which proxies through `/_next/image` server-side. The browser only ever requests our own domain — it never makes a cross-origin request to the image CDN. Raw `<img>` bypasses this proxy and does send a `Referer` header directly to the CDN, which can cause hotlink blocks (root cause of the Pexels image failures in v2.2.0 — resolved by switching to `next/image`).
+- Because `next/image` proxies server-side, the CORS/hotlink policy of the image CDN is irrelevant to the browser. Any CDN reachable by the server works. We use Unsplash because hotlinking is explicitly permitted and images are high quality.
+- All external image hostnames must be listed in `next.config.ts` `images.remotePatterns` **before** being used in `<Image>`. Only image CDNs go here — video CDN hostnames are never valid `remotePatterns` entries (next/image cannot process MP4).
 - Unsplash source URLs should include `?auto=format&fit=crop&w=1920&q=80` to cap the source resolution fetched by the Next.js server. Without `w=`, the original file (up to 6000 px+) is downloaded on every image optimisation request.
 
-**Video**
+**Videos — CORS DOES apply; CDN must be explicitly CORS-enabled**
+- `<video>` elements fetch directly from the browser to the video CDN. `next/image` cannot proxy video files (streaming semantics, file size). The browser attaches `Origin` and `Referer` headers; if the CDN returns restrictive CORS headers the browser silently blocks playback — no error, just a blank media element.
+- Every video URL must be served by a CDN that returns `Access-Control-Allow-Origin: *`. Approved sources: Google Cloud Storage public buckets, Cloudinary (free tier), Bunny.net, self-hosted. **Pexels video CDN (`videos.pexels.com`) is not approved** — it blocks cross-origin `<video>` requests. This was the root cause of the original hero video failure and is why we now use `storage.googleapis.com`.
 - Autoplay background videos must be `muted`, `loop`, and `playsInline` — all three, always.
 - Never use a UHD source as the sole video option. Document resolution in `mediaConfig.ts` and note bandwidth cost. If a lower-quality source is available, add it as a second `<source>`.
-- Do not assume a video CDN allows direct `<video>` hotlinking. Always implement a fallback image for the case where the video fails to load (`onError` → state change → show image layer). Pexels video CDN blocks hotlinking — this is why HeroMedia has a 3-layer fallback.
+- Always implement a fallback image for the case where the video fails to load (`onError` → state change → show image layer). This is required because even CORS-enabled CDNs can experience outages.
 - Mount the fallback image **only when needed** (video failed or reduced-motion active). Do not render an image element with `priority` while the video is already playing — it wastes a forced high-priority fetch.
 
 **Client components**
@@ -209,6 +251,7 @@ a specific past failure — they are not theoretical.
 - `remotePatterns` in `next.config.ts` is the security boundary for `next/image`. Review its entries before every release. Only image CDNs belong here. Remove entries that are no longer used.
 - When adding a new external image source, add a comment explaining why that domain is trusted and what it is used for. Do not add domains silently.
 - Never pass user-controlled or frontmatter-derived values directly to an image `src` without understanding that `next/image` will attempt to fetch from that URL server-side. The `remotePatterns` allowlist protects against SSRF from unknown domains — rely on it.
+- **Never add a video CDN hostname to `remotePatterns`.** `next/image` cannot process video files. Adding `videos.pexels.com` or any other video CDN to `remotePatterns` is non-functional and misleading. Video URLs are used directly in `<video>` elements and must satisfy the separate CORS-enabled CDN requirement (see Performance → Videos above).
 - Do not use `dangerouslySetInnerHTML` anywhere. If MDX content requires custom HTML, use registered MDX components (see Tip, DidYouKnow, Impact pattern).
 
 **Sensitive data**

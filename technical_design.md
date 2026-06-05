@@ -1,7 +1,7 @@
 # EarthPulse — Technical Design Document
 
-**Version:** 1.0  
-**Status:** Active  
+**Version:** 1.0 (reflects v1.0.0 architecture — see functional_spec.md for current state)
+**Status:** Reference — covers initial architecture; newer components documented in CLAUDE.md  
 **Last updated:** June 2024
 
 ---
@@ -99,8 +99,8 @@ earthpulse/
 ├── README.md
 ├── FUNCTIONAL_SPEC.md
 ├── TECHNICAL_DESIGN.md
-├── next.config.mjs
-├── tailwind.config.ts
+├── next.config.ts                 ← TypeScript config (not .mjs)
+│                                  NOTE: no tailwind.config.ts — Tailwind v4 uses CSS config
 ├── tsconfig.json
 └── package.json
 ```
@@ -179,10 +179,10 @@ No pages use SSR or ISR in v1. Every page is fully static — optimal for CDN ca
 
 ## 7. Styling
 
-Tailwind CSS utility classes are used throughout. Custom design tokens are defined in `tailwind.config.ts`:
+Tailwind CSS utility classes are used throughout. Custom design tokens are defined in `src/app/globals.css` via `@theme` blocks (Tailwind v4 CSS-based config — no `tailwind.config.ts` file):
 
 - **Brand colour:** A green teal ramp (`brand-50` to `brand-900`) based on `#1D9E75`
-- **Dark mode:** `class` strategy — controlled by the `dark` class on `<html>`. Currently set by system preference. A manual toggle is planned for v2.
+- **Dark mode:** `class` strategy — `next-themes` sets the `dark` class on `<html>`; Tailwind v4 requires `@custom-variant dark` in globals.css. Manual toggle in Navbar shipped in v2.0.0.
 - **Typography:** `@tailwindcss/typography` plugin provides the `prose` class used for MDX article bodies.
 
 Global utility classes defined in `globals.css`:

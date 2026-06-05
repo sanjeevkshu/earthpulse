@@ -1,6 +1,6 @@
 # EarthPulse — Local setup and launch guide
 
-**Current version:** v2.2.0  
+**Current version:** v2.5.0  
 **Last updated:** Jun 2026
 
 Follow these steps exactly. After step 4 you will have a running site at `localhost:3000`. After step 6 it will be live on the internet.
@@ -31,15 +31,17 @@ Create each file at the path shown. The complete file list:
 
 ```
 earthpulse/
-├── .gitignore                                     ← artifact: .gitignore
-├── package.json                                   ← artifact: package.json
-├── next.config.mjs                                ← artifact: next.config.mjs
-├── tailwind.config.ts                             ← artifact: tailwind.config.ts
-├── tsconfig.json                                  ← artifact: tsconfig.json
-│
-├── README.md                                      ← artifact: README.md
-├── FUNCTIONAL_SPEC.md                             ← artifact: FUNCTIONAL_SPEC.md
-├── TECHNICAL_DESIGN.md                            ← artifact: TECHNICAL_DESIGN.md
+├── .gitignore
+├── package.json
+├── next.config.ts                                 ← Next.js config (TypeScript, not .mjs)
+├── tsconfig.json
+│                                                  NOTE: No tailwind.config.ts — Tailwind v4 is
+│                                                  configured entirely in src/app/globals.css via
+│                                                  @theme, @plugin, and @custom-variant blocks.
+├── README.md
+├── functional_spec.md
+├── technical_design.md
+├── launch_guide.md
 │
 ├── content/
 │   ├── our-planet/
@@ -68,16 +70,23 @@ earthpulse/
 │   │   ├── layout/
 │   │   │   ├── Navbar.tsx                        ← responsive nav with ThemeToggle
 │   │   │   ├── Footer.tsx
-│   │   │   └── ThemeProvider.tsx                 ← next-themes provider (v2)
+│   │   │   └── ThemeProvider.tsx                 ← next-themes provider (v2.0.0)
 │   │   ├── ui/
-│   │   │   └── ThemeToggle.tsx                   ← sun/moon toggle button (v2)
+│   │   │   ├── ThemeToggle.tsx                   ← sun/moon toggle button (v2.0.0)
+│   │   │   ├── HeroMedia.tsx                     ← session-rotating hero background (v2.3.0)
+│   │   │   ├── BannerImage.tsx                   ← generic image+gradient fallback (v2.3.0)
+│   │   │   ├── PageHero.tsx                      ← full-bleed hybrid hero (v2.4.0)
+│   │   │   └── NewsletterForm.tsx                ← Brevo embed placeholder (v2.5.0)
 │   │   └── article/
 │   │       ├── ArticleCard.tsx
-│   │       ├── Tip.tsx                           ← amber callout box (v2)
-│   │       ├── DidYouKnow.tsx                    ← teal callout box (v2)
-│   │       └── Impact.tsx                        ← orange callout box (v2)
+│   │       ├── Tip.tsx                           ← amber callout (v2.2.0)
+│   │       ├── DidYouKnow.tsx                    ← teal callout (v2.2.0)
+│   │       ├── Impact.tsx                        ← orange callout (v2.2.0)
+│   │       └── Callout.tsx                       ← generic icon+title card (v2.5.0)
 │   └── lib/
-│       └── content.ts
+│       ├── content.ts                            ← pillar article loader
+│       ├── pages.ts                              ← static page loader (v2.5.0)
+│       └── mediaConfig.ts                        ← all image/video URLs (v2.3.0)
 │
 └── public/
     └── images/                                   ← empty for now; add images here
@@ -142,18 +151,22 @@ git push -u origin main
 
 ---
 
-## Features active in this release (v2.2.0)
+## Features active in this release (v2.5.0)
 
-All features below ship in a fresh install. Earlier version tags show when each was introduced.
+All features below ship in a fresh install. Version tags show when each was introduced.
 
 | Feature | Version | Where |
 |---------|---------|-------|
 | Dark mode toggle | v2.0.0 | Navbar — desktop right side and beside mobile hamburger |
 | Tailwind v4 dark fix | v2.1.0 | `src/app/globals.css` — `@custom-variant dark` |
-| Homepage video hero | v2.2.0 | `src/app/page.tsx` — Pexels forest video with static fallback |
-| Pillar banner images | v2.2.0 | `src/app/[pillar]/page.tsx` — one Pexels image per pillar |
-| Article cover image | v2.2.0 | Rendered automatically when `coverImage` is set in MDX frontmatter |
+| Homepage video hero | v2.2.0 | `src/app/page.tsx` — Google GCS video, Unsplash fallback image |
 | Callout components | v2.2.0 | `<Tip>`, `<DidYouKnow>`, `<Impact>` — usable in any `.mdx` file |
+| Media reliability | v2.3.0 | Unsplash images via next/image proxy; Google GCS video for CORS compliance |
+| Session-rotating hero | v2.4.0 | 5 nature scenes rotate per browser session via `sessionStorage` |
+| PageHero — pillar & article | v2.4.0 | Full-bleed, hybrid video/image; title/breadcrumb overlaid |
+| Dynamic article cover | v2.4.0 | Tag-based image resolution: `coverImage` → tag map → pillar image |
+| Static pages as MDX | v2.5.0 | About, Contribute, Newsletter, Privacy in `content/pages/` |
+| `<Callout>` component | v2.5.0 | Generic icon+title card for static pages |
 
 ### Using callout components in MDX articles
 
@@ -173,12 +186,12 @@ All features below ship in a fresh install. Earlier version tags show when each 
 
 ### Adding a cover image to an article
 
-Set `coverImage` in the frontmatter — accepts relative paths or absolute URLs:
+Set `coverImage` in the frontmatter — use Unsplash CDN URLs (CORS-safe via next/image proxy) or relative paths:
 
 ```yaml
 ---
 title: "My article"
-coverImage: "https://images.pexels.com/photos/XXXXXXX/pexels-photo-XXXXXXX.jpeg?auto=compress&cs=tinysrgb&w=1920"
+coverImage: "https://images.unsplash.com/photo-{ID}?auto=format&fit=crop&w=1920&q=80"
 ---
 ```
 

@@ -1,6 +1,6 @@
 # EarthPulse — Functional Specification
 
-**Current version:** 2.3.2  
+**Current version:** 2.5.0  
 **Status:** Active  
 **Last updated:** June 2026
 
@@ -17,6 +17,8 @@
 | v2.3.0 | Jun 2026 | Fix | Media reliability — Unsplash CDN for all images, 3-layer fallback chain, centralised `mediaConfig.ts`, `HeroMedia` + `BannerImage` components |
 | v2.3.1 | Jun 2026 | Content | `coverImage` frontmatter added to all 6 seed articles; content/structural media boundary documented |
 | v2.3.2 | Jun 2026 | Fix | Article cover auto-fallback — pillar image used when `coverImage` is absent; every article always has a visual header |
+| v2.4.0 | Jun 2026 | Feature | UX elevation — session-rotating hero pool, PageHero full-bleed hybrid component, tag-based dynamic cover resolution |
+| v2.5.0 | Jun 2026 | Feature | Static pages converted to MDX — About, Contribute, Newsletter, Privacy in `content/pages/`; new `pages.ts` loader; `Callout` + `NewsletterForm` components |
 
 ---
 
@@ -159,16 +161,21 @@ Displayed on homepage and pillar index pages. Each card shows:
 | Pillar contextual banner images | v2.2.0 | ✅ Released | Full-width banner image per pillar index page |
 | Article cover image | v2.2.0 | ✅ Released | Rendered when `coverImage` is set in MDX frontmatter |
 | MDX callout components | v2.2.0 | ✅ Released | `Tip`, `DidYouKnow`, `Impact` usable in all MDX articles |
-| Reading progress bar | v2.3.0 | 🔲 Planned | Scroll-driven bar on long-form article pages |
-| Site search | v2.4.0 | 🔲 Planned | Pagefind-powered static search with tag/pillar filtering |
-| Newsletter page | v2.4.0 | 🔲 Planned | Brevo embed with topic preference checkboxes |
-| Sitemap | v2.4.0 | 🔲 Planned | `src/app/sitemap.ts` using `getAllArticles()` |
-| robots.txt | v2.4.0 | 🔲 Planned | `src/app/robots.ts` |
-| About page | v2.5.0 | 🔲 Planned | Mission, team, editorial standards |
-| Contribute page | v2.5.0 | 🔲 Planned | How to submit articles or corrections |
-| Interactive timeline | v2.6.0 | 🔲 Planned | Visual, filterable timeline for Through Time section |
-| Data visualisations | v2.6.0 | 🔲 Planned | Embedded charts (CO₂ trends, deforestation rates) |
-| Mega-menu | v2.7.0 | 🔲 Planned | Rich pillar navigation with sub-topic links |
+| Hero session rotation | v2.4.0 | ✅ Released | Pool of 5 hero media entries; random pick stored in sessionStorage per session |
+| PageHero — full-bleed hybrid | v2.4.0 | ✅ Released | Full-bleed hero with image+video hybrid, overlay title/breadcrumb, IntersectionObserver |
+| Dynamic article cover | v2.4.0 | ✅ Released | `resolveCoverImage()` resolves: frontmatter → tag map → pillar image |
+| Static pages as MDX | v2.5.0 | ✅ Released | About, Contribute, Newsletter, Privacy authored in MDX under `content/pages/`; `Callout` + `NewsletterForm` components |
+| About page | v2.5.0 | ✅ Released | `/about` — mission, values, editorial standards, get involved |
+| Contribute page | v2.5.0 | ✅ Released | `/contribute` — what we publish, how to submit, editorial guidelines, article template |
+| Newsletter page | v2.5.0 | ✅ Released | `/newsletter` — value props, topic selector, Brevo embed placeholder |
+| Privacy page | v2.5.0 | ✅ Released | `/privacy` — full privacy policy in MDX prose |
+| Reading progress bar | v2.6.0 | 🔲 Planned | Scroll-driven bar on long-form article pages |
+| Site search | v2.7.0 | 🔲 Planned | Pagefind-powered static search with tag/pillar filtering |
+| Sitemap | v2.7.0 | 🔲 Planned | `src/app/sitemap.ts` using `getAllArticles()` + `getAllPageSlugs()` |
+| robots.txt | v2.7.0 | 🔲 Planned | `src/app/robots.ts` |
+| Interactive timeline | v2.8.0 | 🔲 Planned | Visual, filterable timeline for Through Time section |
+| Data visualisations | v2.8.0 | 🔲 Planned | Embedded charts (CO₂ trends, deforestation rates) |
+| Mega-menu | v2.9.0 | 🔲 Planned | Rich pillar navigation with sub-topic links |
 
 ### 6.1 Dark mode toggle — v2.0.0 · v2.1.0 (released Jun 2025)
 
@@ -207,40 +214,47 @@ Displayed on homepage and pillar index pages. Each card shows:
 - Video and fallback image both carry `aria-hidden="true"` — they are decorative
 - `prefers-reduced-motion` respected at the CSS level; no JavaScript feature detection needed
 
-**Media sources (Pexels, free licence):**
-- Video: `https://videos.pexels.com/video-files/3571264/3571264-uhd_2560_1440_30fps.mp4`
-- Fallback image: `https://images.pexels.com/photos/957024/forest-trees-perspective-bright-957024.jpeg`
+**Media sources:**
+- Video: Google Cloud Storage public bucket (`storage.googleapis.com/gtv-videos-bucket/sample/`) — serves `Access-Control-Allow-Origin: *`, cross-origin `<video>` playback guaranteed. Pexels video CDN was evaluated and rejected: it blocks cross-origin `<video>` requests via restrictive CORS headers.
+- Images: Unsplash CDN (`images.unsplash.com`) — routed through `next/image` server proxy, so browser CORS policy is irrelevant for images.
+
+**CORS strategy (why images and videos use different CDNs):**
+- Images go through Next.js `/_next/image` proxy — the browser fetches from our server, not from Unsplash directly. CORS/hotlink policy of the image CDN does not apply to the browser.
+- Videos are fetched directly by the browser's `<video>` element. `next/image` cannot proxy MP4 files. The video CDN must return `Access-Control-Allow-Origin: *` or the browser blocks playback silently. This rules out Pexels video CDN and any CDN with restrictive CORS headers.
 
 **Technical approach:**
-- Static `<img>` (fallback) + `<video>` layered absolutely inside a `relative overflow-hidden` section
-- Tailwind `motion-reduce:hidden` / `motion-safe:hidden` control which element is visible
-- `next.config.ts` updated with `images.pexels.com` and `videos.pexels.com` remote patterns
+- Session-rotating pool of 5 entries managed by `HeroMedia` client component
+- `sessionStorage` key `ep-hero-idx` keeps the selection consistent within a session
+- `next.config.ts` `remotePatterns` lists `images.unsplash.com` (active) and `images.pexels.com` (reserved safety net — no current content uses Pexels images, but kept to support any author who supplies a Pexels `coverImage`). Video CDN hostnames are intentionally excluded — next/image cannot process MP4
 
 ---
 
-### 6.3 Pillar page contextual banner images — v2.2.0 (released Jun 2026)
+### 6.3 Pillar page contextual banner images — v2.2.0 · v2.4.0 (released Jun 2026)
 
-**Behaviour:**
-- Each pillar index page (`/our-planet`, `/through-time`, etc.) opens with a full-width banner image relevant to that pillar's theme
-- Banner height: `h-64` on mobile, `h-80` on `md+`
-- A bottom-to-transparent gradient scrim blends the banner into the page background in both light and dark mode
-- The pillar title, icon, and description appear below the banner as before
+**Behaviour (v2.4.0):**
+- Each pillar page opens with a full-bleed `PageHero` spanning `min-h-[70vh]`
+- The pillar title, icon, and description are overlaid on the banner (not below it)
+- Static image on load; video plays on hover/touch when a `videoSrc` is supplied
+- Previous v2.2.0 behaviour (fixed-height `BannerImage` with heading below) superseded
 
-**Image map (Pexels):**
+**Image map (Unsplash — switched from Pexels in v2.3.0):**
 
-| Pillar | Image |
-|--------|-------|
-| Our Planet | `pexels-photo-3244513.jpeg` — lush green forest |
-| Through Time | `pexels-photo-1162251.jpeg` — geological layers |
-| Human Footprint | `pexels-photo-929385.jpeg` — industrial landscape |
-| In Action | `pexels-photo-1072824.jpeg` — community action |
-| Voices & Research | `pexels-photo-256541.jpeg` — books / research |
-| Take Action | `pexels-photo-1072179.jpeg` — hands together |
+| Pillar | Unsplash subject |
+|--------|-----------------|
+| Our Planet | Aerial tropical rainforest |
+| Through Time | Ancient rock strata |
+| Human Footprint | Industrial smokestacks at dusk |
+| In Action | Wind turbines on green hills |
+| Voices & Research | Open books / library |
+| Take Action | Community volunteers outdoors |
+
+All images sourced from `images.unsplash.com`. Pexels images were used in v2.2.0 but replaced in v2.3.0 after confirming that Pexels CDN can block hotlinking under certain referrer conditions; Unsplash explicitly permits web embedding.
 
 **Technical approach:**
-- `PILLAR_IMAGES` map defined locally in `src/app/[pillar]/page.tsx`
-- `next/image` with `fill` and `objectFit: 'cover'`, `priority` for LCP
-- Scrim: `bg-gradient-to-t from-white dark:from-gray-950 to-transparent`
+- `PILLAR_IMAGES` exported from `src/lib/mediaConfig.ts`
+- `next/image` with `fill`, `sizes="100vw"`, `priority` (LCP element)
+- All images server-proxied via `/_next/image` — browser CORS does not apply
+- `videoSrc` field in each entry points to a CORS-enabled CDN (`storage.googleapis.com`)
 
 ---
 
@@ -306,6 +320,77 @@ Three reusable callout boxes available in all MDX articles. Import automatically
 ```
 
 All three components are dark-mode aware via Tailwind `dark:` utilities.
+
+---
+
+---
+
+### 6.6 Hero session rotation — v2.4.0 (released Jun 2026)
+
+**Behaviour:**
+- On each new browser session the homepage hero shows a different media entry from a pool of 5 nature scenes
+- The chosen index is persisted in `sessionStorage` under `ep-hero-idx` so the same scene plays throughout the session but changes on the next visit or new tab
+- All entries share the same 3-layer fallback chain (video → Unsplash image → CSS gradient)
+
+**Pool entries:** Forest canopy · Open ocean · Mountain landscape at dawn · Arctic wilderness · Underwater world
+
+**Technical approach:**
+- `HERO_MEDIA_POOL` array exported from `src/lib/mediaConfig.ts`
+- `HeroMedia` client component reads/writes `sessionStorage` in `useEffect` (SSR-safe; server and first render both use index 0, seamless swap after hydration)
+
+---
+
+### 6.7 PageHero — full-bleed hybrid hero — v2.4.0 (released Jun 2026)
+
+**Behaviour:**
+- Replaces the previous `BannerImage` + detached heading pattern on pillar and article pages
+- Full-bleed section spanning `min-h-[70–80vh]` — the page "opens" with the visual before content begins
+- **Static image on load** — image always renders immediately; no layout shift
+- **Lazy video on interaction** — the video element is NOT mounted until the user first hovers (desktop) or touches (mobile); saves bandwidth for users who never interact
+- When interaction starts: image cross-fades out (700 ms), video begins playing beneath
+- When interaction ends: video pauses, image cross-fades back in
+- **IntersectionObserver** — when the hero is >85% scrolled out of viewport the video pauses and image resumes automatically; interaction is required to restart
+- **prefers-reduced-motion** — video never mounts; image-only mode throughout
+- Video hint text (`▶ Hover or touch to play`) shown only when a `videoSrc` is provided and motion is allowed; `aria-hidden` (decorative)
+
+**Overlay layout:**
+- Breadcrumb: top-left, white text at 70% opacity, no background
+- Pillar badge: bottom-left above title
+- Page `<h1>`: bottom-left, large white text with `drop-shadow-lg`
+- Subtitle/description: below title, `text-gray-200`
+- Dark gradient scrim (`from-black/45 via-black/10 to-black/75`) ensures WCAG AA contrast for all text
+
+**Accessibility:**
+- All media layers are `aria-hidden="true"` (decorative)
+- `<h1>` is the first heading in DOM order — correct semantic structure
+- Breadcrumb uses `<nav aria-label="Breadcrumb">` with proper link text
+- Video hint is `aria-hidden` — purely visual, not needed by screen readers
+
+**Technical approach:**
+- `src/components/ui/PageHero.tsx` — client component
+- `onCanPlay` fires auto-play after first mount (guarded by `didAutoPlay` ref — one attempt only)
+- Subsequent interactions call `videoRef.current.play()` / `.pause()` directly
+- `priority` on `<Image>` — banner is the LCP element on pillar and article pages
+
+---
+
+### 6.8 Dynamic article cover — `resolveCoverImage()` — v2.4.0 (released Jun 2026)
+
+**Behaviour:**
+- Every article always shows a contextually appropriate cover image with zero author effort
+- New articles without `coverImage` frontmatter automatically receive a tag-matched image
+
+**Resolution priority (server-side, pure function):**
+1. `article.coverImage` — explicit author choice in MDX frontmatter
+2. `ARTICLE_MEDIA_TAGS[tag]` — first matching tag in the article's tag list
+3. `PILLAR_IMAGES[pillar].src` — pillar-level fallback; always resolves
+
+**Tag map (`ARTICLE_MEDIA_TAGS`)** covers 19 tags including: `oceans`, `biodiversity`, `climate`, `ecosystems`, `forests`, `agriculture`, `food systems`, `deforestation`, `policy`, `government`, `conservation`, `sustainability`, `evolution`, `geology`, `history`, `extinction`, `science`, `action`, `lifestyle`
+
+**Technical approach:**
+- `resolveCoverImage(coverImage, tags, pillar)` exported from `src/lib/mediaConfig.ts`
+- Called in the article page server component — no client JS required
+- Resolved `src` passed as `imageSrc` prop to `PageHero`
 
 ---
 
