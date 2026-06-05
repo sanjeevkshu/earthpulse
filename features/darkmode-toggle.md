@@ -14,6 +14,26 @@ npm install next-themes
 
 ---
 
+## Step 1b — Configure Tailwind v4 class-based dark variant ⚠️ Required
+
+> **Tailwind v4 breaking difference:** In Tailwind v4, the `dark:` utility variant defaults to
+> `@media (prefers-color-scheme: dark)` — the OS media query. `next-themes` works by toggling
+> a `.dark` class on `<html>`. These two mechanisms are incompatible without an explicit override.
+> Without this step, all `dark:*` inline utilities silently ignore the manual toggle and only
+> react to the user's OS setting.
+
+In `src/app/globals.css`, add this line immediately after the `@import` / `@plugin` block:
+
+```css
+/* Wire dark: utilities to the .dark class that next-themes applies to <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+```
+
+This tells Tailwind that the `dark:` variant should activate whenever an element is `.dark`
+or is a descendant of `.dark` — which is exactly what `next-themes` sets.
+
+---
+
 ## Step 2 — Create src/components/layout/ThemeProvider.tsx
 
 ```tsx
@@ -159,7 +179,22 @@ Confirm clean build with no TypeScript errors.
 
 | File | Action |
 |------|--------|
+| `src/app/globals.css` | Update — add `@custom-variant dark` to enable class-based dark mode |
 | `src/components/layout/ThemeProvider.tsx` | Create new |
 | `src/components/ui/ThemeToggle.tsx` | Create new |
 | `src/app/layout.tsx` | Update — add ThemeProvider import and wrapper |
 | `src/components/layout/Navbar.tsx` | Update — add ThemeToggle in desktop and mobile |
+
+---
+
+## Tailwind v4 + next-themes: how they fit together
+
+| Layer | Mechanism | Who sets it |
+|-------|-----------|-------------|
+| `next-themes` | Adds/removes `.dark` class on `<html>` | ThemeProvider on client |
+| Tailwind `dark:` utilities (v4 default) | `@media (prefers-color-scheme: dark)` | OS only — **ignores class** |
+| Tailwind `dark:` utilities (after fix) | `.dark` ancestor selector | next-themes class ✅ |
+| Custom CSS `.dark .classname` rules | CSS descendant selector | next-themes class ✅ (always worked) |
+
+The `@custom-variant dark` line is the bridge that makes Tailwind's `dark:` utilities
+respond to next-themes' class instead of the OS media query.

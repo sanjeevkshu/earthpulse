@@ -83,7 +83,7 @@ coverImage: "/images/articles/my-image.jpg"   # optional
 ## Design tokens
 
 - **Brand colour:** teal-green (`brand-400 = #1D9E75`)
-- **Dark mode:** `class` strategy (follows system; manual toggle planned for v2)
+- **Dark mode:** `class` strategy via `next-themes` — toggle in Navbar, defaults to system preference, persists in localStorage. Tailwind v4 requires `@custom-variant dark (&:where(.dark, .dark *))` in `globals.css` to make `dark:` utilities respond to the class instead of the OS media query.
 - **Typography plugin:** `@tailwindcss/typography` — use `prose-custom` class on article bodies
 - **Shared CSS classes:** `.btn-primary`, `.btn-outline`, `.card`, `.tag`, `.nav-link`, `.section-title`
 

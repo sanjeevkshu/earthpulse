@@ -165,6 +165,7 @@ Displayed on homepage and pillar index pages. Each card shows:
 - New `ThemeToggle` client component renders the icon button using `useTheme()` hook
 - Hydration-safe: toggle renders a placeholder on the server, real button after mount, preventing flicker
 - `suppressHydrationWarning` on `<html>` tag handles server/client theme class mismatch
+- **Tailwind v4 override required:** `@custom-variant dark (&:where(.dark, .dark *))` in `globals.css` — Tailwind v4 defaults `dark:` to a CSS media query; this line switches it to class-based detection so all `dark:` utilities respond to the `.dark` class that `next-themes` applies, not the OS preference alone
 
 ---
 

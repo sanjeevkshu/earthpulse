@@ -2,6 +2,11 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Override Tailwind v4's default media-query dark variant to use the .dark class
+   that next-themes applies to <html>. Without this, dark: utilities respond to
+   the OS preference only and ignore the manual toggle entirely. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-brand-50: #E1F5EE;
   --color-brand-100: #9FE1CB;
