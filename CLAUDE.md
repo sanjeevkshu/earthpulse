@@ -86,8 +86,17 @@ author: "Author Name"        # defaults to "EarthPulse Editorial"
 tags: ["tag1", "tag2"]
 featured: false              # true = shown in homepage featured section
 coverImage: "https://images.unsplash.com/photo-{ID}?auto=format&fit=crop&w=1920&q=80"
+coverVideo: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
 ---
 ```
+
+**`coverVideo` convention:**
+- Optional MP4 URL for the article/page PageHero hover/touch video effect
+- Falls back through `resolveCoverVideo()`: frontmatter → pillar `videoSrc` → `NATURE_VIDEO_SRC`
+- **CDN must return `Access-Control-Allow-Origin: *`** — see Security → Videos rule. Confirmed working source: `https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4` (MDN CC0, 1.1MB, CORS `*`)
+- If omitted, the pillar's default video plays (set in `PILLAR_IMAGES.videoSrc` in `mediaConfig.ts`)
+- `coverVideo` is CONTENT metadata — it lives in MDX frontmatter, not in `mediaConfig.ts`
+- Resolution function: `resolveCoverVideo(article.coverVideo, pillar)` in `src/lib/mediaConfig.ts`
 
 **`coverImage` convention (v2.3.2+):**
 - Recommended on all new articles — all 6 seed articles carry one
@@ -111,9 +120,12 @@ description: "One sentence — used as subtitle on PageHero and in <meta descrip
 date: "2024-06-01"      # ISO — shown as "Last updated" on legal pages
 icon: "🌿"              # Emoji badge overlaid on the PageHero
 coverImage: "https://images.unsplash.com/photo-{ID}?auto=format&fit=crop&w=1920&q=80"
+coverVideo: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
 ```
 
-Design config (gradient, videoSrc) lives in `PAGE_CONFIG` inside `pages.ts` — not in frontmatter.
+`coverVideo` frontmatter overrides `PAGE_CONFIG.videoSrc` when present. Falls back to `PAGE_CONFIG.videoSrc` → `NATURE_VIDEO_SRC` if absent. CDN must serve `Access-Control-Allow-Origin: *`.
+
+Gradient and default `videoSrc` live in `PAGE_CONFIG` inside `pages.ts` — not in frontmatter.
 
 Available MDX components: `Tip`, `DidYouKnow`, `Impact`, `Callout`, `NewsletterForm` (newsletter page only).
 

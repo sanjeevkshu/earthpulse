@@ -225,3 +225,23 @@ export function resolveCoverImage(
   }
   return PILLAR_IMAGES[pillar].src;
 }
+
+/**
+ * Resolve the best available cover video for an article or static page.
+ *
+ * Priority chain (server-side, pure function):
+ *   1. coverVideo frontmatter  — explicit author choice; any CORS-enabled MP4 URL
+ *   2. PILLAR_IMAGES[pillar].videoSrc — pillar-level default (when pillar is known)
+ *   3. NATURE_VIDEO_SRC        — site-wide fallback; always resolves
+ *
+ * The video CDN MUST serve Access-Control-Allow-Origin: * — see mediaConfig header
+ * for the approved CDN list. The resolved value is passed as videoSrc to PageHero.
+ */
+export function resolveCoverVideo(
+  coverVideo: string | undefined,
+  pillar?: Pillar,
+): string {
+  if (coverVideo) return coverVideo;
+  if (pillar) return PILLAR_IMAGES[pillar].videoSrc ?? NATURE_VIDEO_SRC;
+  return NATURE_VIDEO_SRC;
+}

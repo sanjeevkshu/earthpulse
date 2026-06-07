@@ -76,8 +76,8 @@ export default function MetricCard({ metricId, dataset, baselineYear }: Props) {
         <span className="text-xs text-gray-300 dark:text-gray-600 ml-2">({current.year})</span>
       </div>
 
-      {/* Sparkline */}
-      <div className="h-12 -mx-1" aria-hidden="true">
+      {/* Sparkline — no negative margins; SparkLine uses fixed height to prevent Recharts -1 loop */}
+      <div className="h-12 w-full overflow-hidden" aria-hidden="true">
         <SparkLine data={sparkData} color={lineColor} />
       </div>
 

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import { getArticle, getSlugsForPillar, PILLAR_META, Pillar } from '@/lib/content';
-import { PILLAR_IMAGES, resolveCoverImage } from '@/lib/mediaConfig';
+import { PILLAR_IMAGES, resolveCoverImage, resolveCoverVideo } from '@/lib/mediaConfig';
 import PageHero from '@/components/ui/PageHero';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -44,10 +44,11 @@ export default async function ArticlePage({ params }: Props) {
   const pillarMeta = PILLAR_META[pillar];
   const media      = PILLAR_IMAGES[pillar];
 
-  // ── Dynamic cover image resolution (server-side, pure function) ────────────
-  // Priority: frontmatter coverImage → tag-matched image → pillar image.
-  // No author effort required — every article always has a contextual visual.
-  const coverSrc = resolveCoverImage(article.coverImage, article.tags, pillar);
+  // ── Dynamic cover media resolution (server-side, pure functions) ────────────
+  // Image: frontmatter coverImage → tag-matched image → pillar image
+  // Video: frontmatter coverVideo → pillar videoSrc → NATURE_VIDEO_SRC
+  const coverSrc   = resolveCoverImage(article.coverImage, article.tags, pillar);
+  const coverVideo = resolveCoverVideo(article.coverVideo, pillar);
 
   // ── Breadcrumb (white-on-dark, lives inside PageHero overlay) ─────────────
   const breadcrumb = (
@@ -70,12 +71,11 @@ export default async function ArticlePage({ params }: Props) {
   return (
     <>
       {/* ── Full-bleed PageHero ─────────────────────────────────────────────
-          Cover image resolved dynamically from: frontmatter → tag map → pillar.
-          Breadcrumb, pillar badge, title, and description all overlaid on the
-          banner — no separate header section below needed for these. */}
+          Image: frontmatter coverImage → tag map → pillar image
+          Video: frontmatter coverVideo → pillar videoSrc → NATURE_VIDEO_SRC */}
       <PageHero
         imageSrc={coverSrc}
-        videoSrc={media.videoSrc}
+        videoSrc={coverVideo}
         gradientFallback={media.gradient}
         breadcrumb={breadcrumb}
         badge={badge}

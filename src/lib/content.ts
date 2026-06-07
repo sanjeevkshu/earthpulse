@@ -22,6 +22,9 @@ export interface ArticleMeta {
   tags: string[];
   author: string;
   coverImage?: string;
+  /** Optional MP4 video URL for the article PageHero hover/touch effect.
+   *  Falls back through resolveCoverVideo(): pillar videoSrc → NATURE_VIDEO_SRC. */
+  coverVideo?: string;
   featured?: boolean;
   readingTime: string;
 }
@@ -49,7 +52,8 @@ export function getArticle(pillar: Pillar, slug: string): Article | null {
     date: data.date ?? '',
     tags: data.tags ?? [],
     author: data.author ?? 'EarthPulse Editorial',
-    coverImage: data.coverImage,
+    coverImage:  data.coverImage,
+    coverVideo:  data.coverVideo,
     featured: data.featured ?? false,
     readingTime: rt.text,
     content,

@@ -49,6 +49,7 @@ author: "Your Name"
 tags: ["climate", "forests", "policy"]
 featured: false
 coverImage: "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1920&q=80"
+coverVideo: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
 ---
 ```
 
@@ -62,6 +63,8 @@ coverImage: "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=f
 | `author` | ✗ Optional | string | Defaults to `"EarthPulse Editorial"` if omitted. |
 | `tags` | ✗ Optional | string array | See tag list below. Drives tag pages and dynamic cover image lookup. |
 | `featured` | ✗ Optional | boolean | `true` = appears in the homepage "Featured stories" section. Max 3 featured at a time. Defaults to `false`. |
+| `coverImage` | ✗ Optional | Unsplash URL | Hero image. Falls back: tag-matched image → pillar image. See [authoring-media.md](./authoring-media.md). |
+| `coverVideo` | ✗ Optional | MP4 URL | Hero hover/touch video. Falls back: pillar video → site default. CDN must allow cross-origin embedding (`Access-Control-Allow-Origin: *`). Confirmed working: `https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4` |
 | `coverImage` | ✗ Optional | URL string | Hero image for the article page. See [authoring-media.md](./authoring-media.md). Falls back to pillar image if omitted. |
 
 ### Common tags

@@ -6,8 +6,9 @@
  * authored in MDX and rendered with PageHero + MDXRemote, exactly like pillar
  * article pages — hence "load them as Pillar pages."
  *
- * Design config (gradient, videoSrc) lives here rather than in MDX frontmatter.
- * Content authors should only manage title, description, icon, coverImage, date.
+ * Design config (gradient, default videoSrc) lives in PAGE_CONFIG below.
+ * Content authors manage: title, description, icon, coverImage, coverVideo, date.
+ * coverVideo frontmatter overrides PAGE_CONFIG.videoSrc when present.
  */
 
 import fs from 'fs';
@@ -50,11 +51,14 @@ export interface StaticPage {
   date?: string;
   /** Emoji icon shown as a badge above the hero title */
   icon?: string;
-  /** Unsplash cover image URL — auto-resolved to the gradient if absent */
+  /** Unsplash cover image URL — auto-resolved to gradient if absent */
   coverImage?: string;
+  /** Optional MP4 URL from frontmatter — overrides PAGE_CONFIG videoSrc when set.
+   *  Falls back to PAGE_CONFIG.videoSrc → NATURE_VIDEO_SRC if absent. */
+  coverVideo?: string;
   /** Tailwind gradient fallback when coverImage fails — from PAGE_CONFIG */
   gradientFallback: string;
-  /** MP4 video source for hover/touch video on PageHero — from PAGE_CONFIG */
+  /** Resolved MP4 video source: coverVideo frontmatter ?? PAGE_CONFIG.videoSrc */
   videoSrc: string;
   /** Raw MDX string — passed directly to MDXRemote */
   content: string;
@@ -81,8 +85,10 @@ export function getStaticPage(slug: string): StaticPage | null {
     date:        data.date,
     icon:        data.icon,
     coverImage:  data.coverImage,
+    coverVideo:  data.coverVideo,
     gradientFallback: config.gradient,
-    videoSrc:    config.videoSrc,
+    // coverVideo frontmatter overrides the PAGE_CONFIG default video source
+    videoSrc:    data.coverVideo ?? config.videoSrc,
     content,
   };
 }
