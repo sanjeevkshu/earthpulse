@@ -4,6 +4,7 @@ import './globals.css';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ThemeProvider from '@/components/layout/ThemeProvider';
+import ObservatoryFAB from '@/components/observatory/ObservatoryFAB';
 
 // next/font downloads Inter at build time, self-hosts it, and provides
 // size-adjust fallback metrics that match the font exactly.
@@ -31,6 +32,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />
+          {/* Mobile floating action button — lg:hidden, fixed bottom-right */}
+          <ObservatoryFAB />
         </ThemeProvider>
       </body>
     </html>

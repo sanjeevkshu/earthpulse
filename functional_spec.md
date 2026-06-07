@@ -1,6 +1,6 @@
 # EarthPulse — Functional Specification
 
-**Current version:** 2.5.0  
+**Current version:** 3.0.0  
 **Status:** Active  
 **Last updated:** June 2026
 
@@ -19,6 +19,7 @@
 | v2.3.2 | Jun 2026 | Fix | Article cover auto-fallback — pillar image used when `coverImage` is absent; every article always has a visual header |
 | v2.4.0 | Jun 2026 | Feature | UX elevation — session-rotating hero pool, PageHero full-bleed hybrid component, tag-based dynamic cover resolution |
 | v2.5.0 | Jun 2026 | Feature | Static pages converted to MDX — About, Contribute, Newsletter, Privacy in `content/pages/`; new `pages.ts` loader; `Callout` + `NewsletterForm` components |
+| v3.0.0 | Jun 2026 | Feature | Observatory — planetary data dashboard; 6 live metrics; build-time data fetch from NASA/NOAA/NSIDC/GFW/WGMS; Recharts interactive charts; YearScrubber, LifetimeWidget, deep-dive pages |
 
 ---
 
@@ -394,7 +395,132 @@ All three components are dark-mode aware via Tailwind `dark:` utilities.
 
 ---
 
-## 7. Feature specification — v3.0.0+ (future roadmap)
+## 7. EarthPulse Observatory — v3.0.0
+
+### 7.1 Overview
+
+The EarthPulse Observatory is a data-driven dashboard that surfaces real planetary change metrics from authoritative global research agencies (NASA, NOAA, NSIDC, Global Forest Watch, WGMS). It is designed to give users — from curious members of the public to students, researchers, and policymakers — an immediate, scientifically grounded sense of how the planet is changing across six key indicators.
+
+**Design metaphor:** Earth's vital signs. Each metric is framed as a health indicator of a living system, with safe zones, warning bands, and critical thresholds aligned to IPCC and scientific consensus values.
+
+**Data strategy:** All datasets are fetched from public APIs at build time and stored as static JSON in `/public/data/`. Zero API dependency at runtime — data served from Vercel CDN.
+
+---
+
+### 7.2 Observatory entry points
+
+- **Navbar pill (desktop):** teal `🛰️ Observatory` button between the nav links and ThemeToggle — visually distinct from primary navigation
+- **Floating Action Button (mobile):** `ObservatoryFAB` rendered in `layout.tsx`, fixed bottom-right, `lg:hidden` — always accessible on mobile without opening the hamburger menu
+- Both link to `/observatory`
+
+---
+
+### 7.3 Observatory landing dashboard (`/observatory`)
+
+Dark-mode-first layout (`bg-slate-950`) independent of site theme toggle.
+
+**Layout:**
+- Header: `🛰️ EarthPulse Observatory`, subtitle, last-updated timestamp
+- `YearScrubber` — global timeline slider (1950–present); all metric deltas update simultaneously
+- 2×3 metric card grid (desktop) / 1-col (mobile) of `MetricCard` components
+- `LifetimeWidget` below the grid
+- Footer: data attribution + links back to main site
+
+**Each MetricCard shows:**
+- Metric icon, label, current value + unit
+- Delta from baseline year (1990 default, or user's birth year from LifetimeWidget)
+- `StatusBadge` — Safe / Caution / Critical, colour-coded against IPCC thresholds
+- Sparkline chart (last 30 data points, no axes, thin coloured line)
+- Source agency badge
+- "Explore →" link to `/observatory/[metric]`
+
+---
+
+### 7.4 Primary metrics
+
+| Metric | Source | Unit | Period |
+|--------|--------|------|--------|
+| Global temperature anomaly | NASA GISS | °C | 1880–present |
+| Atmospheric CO₂ | NOAA Mauna Loa | ppm | 1958–present |
+| Sea level rise | NASA JPL | mm | 1993–present |
+| Arctic sea ice extent | NSIDC (September min) | M km² | 1979–present |
+| Tropical deforestation | Global Forest Watch | Mha/yr | 2001–present |
+| Glacier mass balance | WGMS cumulative | mm w.e. | 1950–present |
+
+---
+
+### 7.5 IPCC-aligned thresholds
+
+| Metric | Safe | Caution | Critical | Higher = better? |
+|--------|------|---------|----------|-----------------|
+| Temperature | ≤ 1.0°C | 1.0–1.5°C | > 1.5°C | No |
+| CO₂ | ≤ 350 ppm | 350–400 ppm | > 400 ppm | No |
+| Sea level | ≤ 50 mm | 50–150 mm | > 150 mm | No |
+| Sea ice | ≥ 6.0 M km² | 4.5–6.0 | < 3.5 | Yes |
+| Deforestation | ≤ 8 Mha/yr | 8–12 Mha/yr | > 15 Mha/yr | No |
+| Glacier balance | ≥ −10,000 mm | −10k–−20k | < −28,000 mm | Yes |
+
+---
+
+### 7.6 Deep-dive metric pages (`/observatory/[metric]`)
+
+One static page per metric. Generated via `generateStaticParams()`.
+
+- Full interactive Recharts chart (`ComposedChart` + `Area` + `ReferenceLine` + `Brush`)
+- Threshold reference lines with labels at each band boundary
+- Scientific context: 2–3 paragraphs explaining the metric, its significance, and what the current trend implies
+- `DataProvenancePanel`: source agency, dataset name, last fetched date, methodology URL
+- `StatusBadge` + current value prominently displayed
+- Related EarthPulse articles (tag-matched via `getAllArticles()`)
+- Back link to `/observatory`
+
+---
+
+### 7.7 YearScrubber
+
+- Range input (`<input type="range">`) spanning 1950–current year
+- Controls `baselineYear` state in the parent Observatory dashboard
+- All MetricCard delta values recalculate from the selected year
+- Styled with `accent-emerald-500`; shows min year, max year, selected year labels
+
+---
+
+### 7.8 LifetimeWidget
+
+- Text/number input: "I was born in [year]" (range 1924–2010)
+- No data persisted or transmitted — purely client-side calculation
+- For each metric: "Since you were born in 1985, CO₂ has risen by X ppm"
+- Uses `getDeltaFromYear()` from `src/lib/observatory.ts`
+- Updates `baselineYear` in the parent dashboard to match birth year
+
+---
+
+### 7.9 Data pipeline
+
+**Build-time fetch (`scripts/fetch-observatory-data.ts`):**
+1. Fetches each dataset via Node.js native fetch
+2. Parses CSV / space-delimited / GeoJSON
+3. Normalises to `MetricDataset` schema
+4. Writes to `public/data/[metric].json`
+5. On failure: logs error, keeps existing JSON file, does not crash the build
+
+**`prebuild` npm hook:** runs automatically before every `next build`. Also runnable manually via `npm run fetch-data`.
+
+**Data freshness:** A GitHub Actions workflow (`refresh-data.yml`) triggers monthly to update the datasets without a code change.
+
+---
+
+### 7.10 Accessibility
+
+- All charts include an accessible data table (`sr-only`) for screen readers
+- Colour palette tested for Deuteranopia and Protanopia
+- `prefers-reduced-motion`: animated chart transitions disabled, static renders shown
+- Full mobile feature parity via individual metric pages
+- `aria-label` on all interactive Observatory controls
+
+---
+
+## 8. Feature specification — v3.1.0+ (future roadmap)
 
 | Feature | Description |
 |---------|-------------|

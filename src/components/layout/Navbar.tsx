@@ -25,6 +25,12 @@ export default function Navbar() {
             {links.map(l => <Link key={l.href} href={l.href} className="nav-link">{l.label}</Link>)}
           </nav>
           <div className="hidden lg:flex items-center gap-2">
+            <Link
+              href="/observatory"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-brand-400/10 border border-brand-400/30 text-brand-400 hover:bg-brand-400/20 transition-colors"
+            >
+              🛰️ Observatory
+            </Link>
             <ThemeToggle />
             <Link href="/newsletter" className="btn-primary text-xs py-2 px-4">Subscribe</Link>
           </div>

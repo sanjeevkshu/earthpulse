@@ -1,0 +1,143 @@
+{
+  "id": "sea-level",
+  "label": "Sea Level Rise",
+  "unit": "mm",
+  "source": {
+    "agency": "NASA JPL",
+    "dataset": "GMSL v3.1 (cached)",
+    "url": "https://sealevel.nasa.gov/ftp/txt/MSL_Seasonal_v3.1.txt",
+    "methodology": "https://sealevel.nasa.gov/understanding-sea-level/regional-sea-level/overview",
+    "lastFetched": "2026-06-07T10:03:46.786Z"
+  },
+  "thresholds": {
+    "safe": 50,
+    "caution": 100,
+    "critical": 150
+  },
+  "series": [
+    {
+      "year": 1993,
+      "value": 0
+    },
+    {
+      "year": 1994,
+      "value": 4.2
+    },
+    {
+      "year": 1995,
+      "value": 8.1
+    },
+    {
+      "year": 1996,
+      "value": 9.4
+    },
+    {
+      "year": 1997,
+      "value": 12.3
+    },
+    {
+      "year": 1998,
+      "value": 11.8
+    },
+    {
+      "year": 1999,
+      "value": 14.6
+    },
+    {
+      "year": 2000,
+      "value": 17.4
+    },
+    {
+      "year": 2001,
+      "value": 20.1
+    },
+    {
+      "year": 2002,
+      "value": 24.5
+    },
+    {
+      "year": 2003,
+      "value": 27.8
+    },
+    {
+      "year": 2004,
+      "value": 30.2
+    },
+    {
+      "year": 2005,
+      "value": 32.5
+    },
+    {
+      "year": 2006,
+      "value": 35.8
+    },
+    {
+      "year": 2007,
+      "value": 38.4
+    },
+    {
+      "year": 2008,
+      "value": 40.9
+    },
+    {
+      "year": 2009,
+      "value": 44.3
+    },
+    {
+      "year": 2010,
+      "value": 46.2
+    },
+    {
+      "year": 2011,
+      "value": 47.1
+    },
+    {
+      "year": 2012,
+      "value": 52.3
+    },
+    {
+      "year": 2013,
+      "value": 58.4
+    },
+    {
+      "year": 2014,
+      "value": 63.5
+    },
+    {
+      "year": 2015,
+      "value": 68.2
+    },
+    {
+      "year": 2016,
+      "value": 73.8
+    },
+    {
+      "year": 2017,
+      "value": 78.1
+    },
+    {
+      "year": 2018,
+      "value": 82.4
+    },
+    {
+      "year": 2019,
+      "value": 87.9
+    },
+    {
+      "year": 2020,
+      "value": 92.3
+    },
+    {
+      "year": 2021,
+      "value": 95.7
+    },
+    {
+      "year": 2022,
+      "value": 100.4
+    },
+    {
+      "year": 2023,
+      "value": 104.8
+    }
+  ]
+}

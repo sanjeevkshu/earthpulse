@@ -1,33 +1,33 @@
 # EarthPulse — Technical Design Document
 
-**Version:** 1.0 (reflects v1.0.0 architecture — see functional_spec.md for current state)
-**Status:** Reference — covers initial architecture; newer components documented in CLAUDE.md  
-**Last updated:** June 2024
+**Version:** 2.0
+**Status:** Active — updated for v3.0.0 (Observatory)
+**Last updated:** June 2026
 
 ---
 
 ## 1. Architecture overview
 
-EarthPulse is a statically generated website with a decoupled content layer. Content is authored as MDX files in a Git repository and rendered at build time into static HTML. There is no server, no database, and no runtime content fetching.
+EarthPulse is a statically generated website with a decoupled content layer and a build-time data pipeline for the Observatory. Content is authored as MDX files and rendered at build time. Observatory datasets are fetched from public APIs at build time and stored as static JSON — zero runtime API dependency.
 
 ```
-┌─────────────────────┐
-│   GitHub repository  │  ← Source of truth for code + content
-└────────┬────────────┘
+┌─────────────────────────┐
+│   GitHub repository      │  ← Source of truth: code + content + data scripts
+└────────┬────────────────┘
          │ git push
          ▼
-┌─────────────────────┐
-│   Vercel CI/CD       │  ← Detects push, runs next build
-└────────┬────────────┘
-         │ builds static HTML/CSS/JS
+┌─────────────────────────┐
+│   Vercel CI/CD           │  ← Detects push; runs prebuild (fetch-data) then next build
+└────────┬────────────────┘
+         │ builds static HTML/CSS/JS + public/data/*.json
          ▼
-┌─────────────────────┐
-│   Vercel CDN         │  ← Serves globally, SSL automatic
-└─────────────────────┘
-         │
-         ▼ browser request
-┌─────────────────────┐
-│   User browser       │  ← No server-side runtime needed
+┌─────────────────────────┐
+│   Vercel CDN             │  ← Serves globally; JSON files cached at edge
+└─────────────────────────┘
+         │ browser request
+         ▼
+┌─────────────────────────┐
+│   User browser           │  ← No server runtime; Observatory data from CDN-cached JSON
 └─────────────────────┘
 ```
 
@@ -234,7 +234,127 @@ Measures in place:
 
 ---
 
-## 10. Deployment
+## 10. Observatory — data pipeline (three-layer architecture)
+
+### 10.1 Architecture overview
+
+The Observatory uses a three-layer approach to balance freshness, performance, cost, and resilience. **Do not collapse these into a single build-time approach** — Layer 2 is essential for current value accuracy.
+
+```
+Layer 1 — Build-time static (historical series)
+  scripts/fetch-observatory-data.ts  →  /public/data/*.json  →  Vercel CDN
+  Max staleness: 31 days (refreshed monthly by Layer 3)
+  Powers: trend charts, sparklines, YearScrubber, LifetimeWidget
+
+Layer 2 — Route Handler (current year value, on-demand)
+  Browser request  →  /api/observatory/[metric]/route.ts
+                   →  upstream NASA/NOAA endpoint (latest row only)
+                   →  Vercel edge cache 24h
+  Max staleness: 24 hours
+  Powers: MetricCard "current value" badge, StatusBadge
+
+Layer 3 — GitHub Action (monthly scheduled refresh)
+  Cron (1st of each month, 02:00 UTC)  →  fetch-data.ts  →  git commit
+                                        →  Vercel rebuild  →  Layer 1 updated
+  Max staleness of historical series: 31 days
+  Powers: keeps Layer 1 JSON current so trend charts never drift
+```
+
+**Why this matters:** The MetricCard shows CO₂ at "424 ppm" — a value users cross-check against NOAA. Layer 2 ensures that number is always within 24 hours of reality. The trend chart (Layer 1) uses the full historical series from the last monthly rebuild — never more than 31 days behind.
+
+### 10.2 Layer 1 — build-time fetch script
+
+File: `scripts/fetch-observatory-data.ts`
+
+Runs via `prebuild` hook before every Vercel deploy. Also runnable manually: `npm run fetch-data`.
+
+| Metric | URL | Format |
+|--------|-----|--------|
+| temperature | NASA GISS GISTEMP CSV | CSV, Year + J-D annual column |
+| co2 | NOAA Mauna Loa annual mean | CSV, skip `#` comment lines |
+| sea-level | NASA JPL MSL text | Space-delimited, decimal year grouped by integer year |
+| sea-ice | NSIDC September extent | CSV, filter mo=9 rows |
+| deforestation | GFW (hardcoded fallback) | Hansen et al. annual series |
+| glaciers | WGMS (hardcoded fallback) | Cumulative mass balance series |
+
+On failure: logs error, keeps existing JSON, never crashes the build.
+
+### 10.3 Layer 2 — Route Handler (current value)
+
+File: `src/app/api/observatory/[metric]/route.ts`
+
+Fetches only the **most recent row** from the upstream API for the given metric. Returns a single `LivePoint` object. Cached at the Vercel edge for **24 hours**.
+
+**Response shape:**
+```ts
+{ year: number; value: number; unit: string; agency: string; fallback?: true; }
+// fallback: true — present only when served from static JSON (upstream unreachable)
+```
+
+**Cache header:**
+```ts
+'Cache-Control': 's-maxage=86400, stale-while-revalidate=3600'
+```
+
+**Fallback behaviour:** on upstream failure, reads `/public/data/[metric].json`, returns the last non-null entry from `series` plus `fallback: true`. MetricCard shows a subtle "cached" label in this case.
+
+### 10.4 Layer 3 — GitHub Action monthly refresh
+
+File: `.github/workflows/refresh-data.yml`
+
+Scheduled cron job (1st of each month, 02:00 UTC). Runs `npm run fetch-data`, commits any changed JSON files, and pushes to `main` — triggering a Vercel rebuild that updates Layer 1.
+
+```yaml
+on:
+  schedule:
+    - cron: '0 2 1 * *'
+  workflow_dispatch:
+```
+
+### 10.5 Staleness per UI component
+
+| UI component | Data source | Max staleness |
+|---|---|---|
+| Trend chart (full history) | Layer 1 static JSON | 31 days |
+| Sparkline on MetricCard | Layer 1 static JSON | 31 days |
+| YearScrubber / LifetimeWidget | Layer 1 static JSON | 31 days |
+| Current value badge | Layer 2 Route Handler | 24 hours |
+| StatusBadge (Safe/Caution/Critical) | Layer 2 Route Handler | 24 hours |
+| DataProvenancePanel "last updated" | Layer 1 `lastFetched` field | 31 days |
+
+### 10.6 Observatory routing
+
+| Route | Component | Render |
+|-------|-----------|--------|
+| `/observatory` | `src/app/observatory/page.tsx` | SSG |
+| `/observatory/[metric]` | `src/app/observatory/[metric]/page.tsx` | SSG ×6 |
+| `/api/observatory/[metric]` | `route.ts` | Server (Layer 2) |
+
+### 10.7 Observatory UI components
+
+All chart components use a client wrapper + `next/dynamic` with `ssr: false` (Recharts requirement).
+
+| Component | Type | Data source | Purpose |
+|-----------|------|-------------|---------|
+| `ObservatoryFAB` | Client, fixed | — | Mobile FAB, `lg:hidden`, bottom-right |
+| `MetricCard` | Client | Layer 2 (current value) + Layer 1 (sparkline) | Card: live value, delta, StatusBadge, sparkline |
+| `MetricChart` / `MetricChartClient` | Client, ssr:false | Layer 1 | Full Recharts ComposedChart with Area, ReferenceLine, Brush |
+| `YearScrubber` | Client | — | Range input controlling baseline year |
+| `LifetimeWidget` | Client | Layer 1 (props) | Birth year → personalised deltas |
+| `StatusBadge` | Client | Layer 2 (via MetricCard) | Safe/Caution/Critical pill |
+| `DataProvenancePanel` | Server | Layer 1 `source` block | Agency, dataset, lastFetched, URLs |
+
+### 10.8 Technology additions (v3.0.0)
+
+| Package | Purpose |
+|---------|---------|
+| `recharts` | Interactive SVG charts |
+| `csv-parse` | CSV parsing in fetch script (build-time only) |
+| `tsx` | TypeScript script runner for `fetch-observatory-data.ts` |
+
+---
+
+## 11. Deployment
 
 ### 10.1 Vercel deployment
 

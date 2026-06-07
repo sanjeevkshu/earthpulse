@@ -1,0 +1,49 @@
+name: Refresh Observatory Data
+
+# Layer 3 of the Observatory three-layer data architecture.
+# Runs on the 1st of each month at 02:00 UTC.
+# Re-fetches all 6 planetary datasets, commits any changed JSON files,
+# and pushes to main — triggering a Vercel rebuild that updates Layer 1.
+# Also available as a manual workflow dispatch for ad-hoc refreshes.
+
+on:
+  schedule:
+    - cron: '0 2 1 * *'   # 1st of month, 02:00 UTC
+  workflow_dispatch:       # allow manual trigger from GitHub Actions UI
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write      # needed to commit and push
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fetch latest Observatory data
+        run: npm run fetch-data
+
+      - name: Commit updated data files
+        run: |
+          git config user.email "bot@earthpulse.org"
+          git config user.name "EarthPulse Data Bot"
+          git add public/data/
+          git diff --staged --quiet || (
+            git commit -m "chore: refresh observatory data $(date +%Y-%m)"
+            git push
+          )
+
+      # If there were no changes, the workflow still succeeds silently.
+      # Vercel only rebuilds when a commit lands on main.

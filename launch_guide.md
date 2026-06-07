@@ -1,6 +1,6 @@
 # EarthPulse — Local setup and launch guide
 
-**Current version:** v2.5.0  
+**Current version:** v3.0.0  
 **Last updated:** Jun 2026
 
 Follow these steps exactly. After step 4 you will have a running site at `localhost:3000`. After step 6 it will be live on the internet.
@@ -20,7 +20,8 @@ cd earthpulse
 npm install next-mdx-remote gray-matter reading-time date-fns
 npm install @tailwindcss/typography
 npm install next-themes
-npm install -D @types/node
+npm install recharts csv-parse
+npm install -D tsx @types/node
 ```
 
 ---
@@ -167,6 +168,10 @@ All features below ship in a fresh install. Version tags show when each was intr
 | Dynamic article cover | v2.4.0 | Tag-based image resolution: `coverImage` → tag map → pillar image |
 | Static pages as MDX | v2.5.0 | About, Contribute, Newsletter, Privacy in `content/pages/` |
 | `<Callout>` component | v2.5.0 | Generic icon+title card for static pages |
+| **Observatory dashboard** | v3.0.0 | `/observatory` — 6 planetary metrics, dark layout, MetricCard grid |
+| **Observatory deep-dive** | v3.0.0 | `/observatory/[metric]` — full chart, provenance, related articles |
+| **Observatory Navbar** | v3.0.0 | Teal pill (desktop) + FAB (mobile) |
+| **Build-time data fetch** | v3.0.0 | `npm run fetch-data` — NASA/NOAA/NSIDC/GFW/WGMS → `public/data/*.json` |
 
 ### Using callout components in MDX articles
 
@@ -218,3 +223,21 @@ git push
 ```
 
 No code changes needed. No CMS login. Just Markdown and Git.
+
+---
+
+## Refreshing Observatory data
+
+Run the fetch script to pull the latest datasets from NASA, NOAA, NSIDC, GFW, and WGMS:
+
+```bash
+npm run fetch-data
+# → updates public/data/*.json with latest series
+
+git add public/data/
+git commit -m "chore: refresh Observatory datasets"
+git push
+# → Vercel rebuilds — new data live in ~90 seconds
+```
+
+The `prebuild` hook runs this automatically on every `npm run build`. For continuous freshness, the `.github/workflows/refresh-data.yml` GitHub Action runs it monthly.

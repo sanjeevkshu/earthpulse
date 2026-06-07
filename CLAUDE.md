@@ -9,9 +9,9 @@ It provides full project context so Claude Code can continue development without
 
 ## Project summary
 
-**EarthPulse** is an open-source, content-first environmental education website.
-**Current version:** v2.5.0 (Jun 2026)
-**Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 · MDX · Vercel
+**EarthPulse** is an open-source, content-first environmental education website with a planetary data Observatory.
+**Current version:** v3.0.0 (Jun 2026)
+**Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 · MDX · Recharts · Vercel
 **Repo:** https://github.com/sanjeevkshu/earthpulse *(update this)*
 **Live site:** https://earthpulse.org *(once deployed)*
 
@@ -19,12 +19,16 @@ It provides full project context so Claude Code can continue development without
 
 ## Architecture
 
-- Fully statically generated (SSG) — no server, no database
+- Fully statically generated (SSG) — no server, no database for editorial content
 - Content lives as `.mdx` files in `/content`, parsed at build time
+- Observatory data fetched from public APIs at build time, stored as static JSON in `/public/data/`
+- `prebuild` script runs `fetch-observatory-data.ts` automatically before every build
 - Deployed to Vercel free Hobby tier — auto-deploys on every push to `main`
 - No CMS — content is authored directly as Markdown in Git
 
 ```
+scripts/
+  fetch-observatory-data.ts  ← build-time fetch from NASA/NOAA/NSIDC/GFW/WGMS
 content/                     ← all MDX content
   our-planet/                ← pillar articles
   through-time/
@@ -33,19 +37,33 @@ content/                     ← all MDX content
   voices/
   take-action/
   pages/                     ← static site pages (About, Contribute, Newsletter, Privacy)
+public/
+  images/
+  data/                      ← Observatory JSON datasets (generated at build)
+    temperature.json · co2.json · sea-level.json · sea-ice.json · deforestation.json · glaciers.json
 doc/                         ← authoring guides for content authors (see below)
 src/
-  app/                       ← Next.js App Router pages
+  app/
+    layout.tsx               ← ThemeProvider + ObservatoryFAB
+    page.tsx                 ← Homepage
+    observatory/
+      page.tsx               ← Observatory landing dashboard
+      [metric]/page.tsx      ← Deep-dive per metric
+    api/observatory/
+      [metric]/route.ts      ← Layer 2: current value, edge-cached 24h
+    [pillar]/page.tsx · [pillar]/[slug]/page.tsx · tag/[tag]/page.tsx
+    about/ · newsletter/ · contribute/ · privacy/
   components/
-    layout/                  ← Navbar, Footer, ThemeProvider
+    layout/                  ← Navbar (Observatory pill), Footer, ThemeProvider
     article/                 ← ArticleCard, Tip, DidYouKnow, Impact, Callout
+    observatory/             ← ObservatoryFAB, MetricCard, MetricChart, YearScrubber,
+                             ←   LifetimeWidget, StatusBadge, DataProvenancePanel
     ui/                      ← ThemeToggle, HeroMedia, BannerImage, PageHero, NewsletterForm
   lib/
     content.ts               ← MDX loader, getAllArticles, getArticle, PILLAR_META
+    observatory.ts           ← MetricDataset type, METRIC_META, threshold logic, helpers
     pages.ts                 ← static page loader, getStaticPage
     mediaConfig.ts           ← all image/video URLs, resolveCoverImage
-public/
-  images/
 CLAUDE.md                    ← this file
 README.md
 functional_spec.md
@@ -120,6 +138,11 @@ Current pages: `about.mdx` · `contribute.mdx` · `newsletter.mdx` · `privacy.m
 
 - **Brand colour:** teal-green (`brand-400 = #1D9E75`)
 - **Dark mode:** `class` strategy via `next-themes` — toggle in Navbar, defaults to system preference, persists in localStorage. Tailwind v4 requires `@custom-variant dark (&:where(.dark, .dark *))` in `globals.css` to make `dark:` utilities respond to the class instead of the OS media query.
+- **Observatory palette (dark-first, independent of site theme):**
+  - Background: `bg-slate-950` / `bg-slate-900`
+  - Accent: `brand-400` (#1D9E75)
+  - Warning: amber `#F59E0B` (`text-amber-400`, `bg-amber-500/20`)
+  - Critical: red `#EF4444` (`text-red-400`, `bg-red-500/20`)
 - **Typography plugin:** `@tailwindcss/typography` — use `prose-custom` class on article bodies
 - **Shared CSS classes:** `.btn-primary`, `.btn-outline`, `.card`, `.tag`, `.nav-link`, `.section-title`
 
@@ -138,7 +161,8 @@ Current pages: `about.mdx` · `contribute.mdx` · `newsletter.mdx` · `privacy.m
 | v2.3.2 | Jun 2026 | Fallback — article cover auto-fills from pillar image when `coverImage` frontmatter is absent | ✅ |
 | v2.4.0 | Jun 2026 | UX elevation — session-rotating hero pool · PageHero (full-bleed, hybrid video/image, overlay title) · tag-based `resolveCoverImage` | ✅ |
 | v2.5.0 | Jun 2026 | Static pages → MDX — About, Contribute, Newsletter, Privacy moved to `content/pages/`; new `pages.ts` loader; `Callout` + `NewsletterForm` components | ✅ |
-| v2.6.0 | — | Reading progress bar on article pages | 🔲 |
+| v3.0.0 | Jun 2026 | Observatory — planetary data dashboard with 6 metrics, fetch script, Recharts charts, YearScrubber, LifetimeWidget, deep-dive pages, Navbar pill + mobile FAB | 🔲 |
+| v3.1.0 | — | Reading progress bar on article pages | 🔲 |
 | v2.7.0 | — | Site search (Pagefind) · Sitemap · robots.txt | 🔲 |
 | v2.8.0 | — | Interactive timeline · Data visualisations | 🔲 |
 | v2.9.0 | — | Mega-menu | 🔲 |
@@ -146,17 +170,18 @@ Current pages: `about.mdx` · `contribute.mdx` · `newsletter.mdx` · `privacy.m
 
 ---
 
-## Planned features — next up (v2.6.0+)
+## Planned features — next up (v3.0.0+)
 
 | Feature | Target | Notes |
 |---------|--------|-------|
-| Reading progress bar | v2.6.0 | Client component, scroll event listener, on article pages |
-| Site search | v2.7.0 | Pagefind — runs at build time, zero server needed |
-| Sitemap | v2.7.0 | `src/app/sitemap.ts` using `getAllArticles()` |
-| robots.txt | v2.7.0 | `src/app/robots.ts` |
-| Interactive timeline | v2.8.0 | Visual, filterable timeline for Through Time section |
-| Data visualisations | v2.8.0 | Embedded charts (CO₂ trends, deforestation rates) |
-| Mega-menu | v2.9.0 | Rich pillar navigation with sub-topic links |
+| **Observatory** | v3.0.0 | Planetary data dashboard — see Observatory sections below |
+| Reading progress bar | v3.1.0 | Client component, scroll event listener, on article pages |
+| Site search | v3.2.0 | Pagefind — runs at build time, zero server needed |
+| Sitemap | v3.2.0 | `src/app/sitemap.ts` using `getAllArticles()` + Observatory routes |
+| robots.txt | v3.2.0 | `src/app/robots.ts` |
+| GitHub Action data refresh | v3.2.0 | `.github/workflows/refresh-data.yml` monthly cron |
+| Interactive timeline | v3.3.0 | Visual, filterable timeline for Through Time section |
+| Mega-menu | v3.4.0 | Rich pillar navigation with sub-topic links |
 
 ## Component inventory (`src/components/`)
 
@@ -177,11 +202,24 @@ Current pages: `about.mdx` · `contribute.mdx` · `newsletter.mdx` · `privacy.m
 | `article/Impact.tsx` | Impact | v2.2.0 | Orange callout box — ⚡ |
 | `article/Callout.tsx` | Callout | v2.5.0 | Generic icon+title+body card — used in static MDX pages |
 
+## Component inventory — Observatory (`src/components/observatory/`)
+
+| Path | Component | Since | Notes |
+|------|-----------|-------|-------|
+| `observatory/ObservatoryFAB.tsx` | ObservatoryFAB | v3.0.0 | Fixed mobile FAB bottom-right, `lg:hidden`, links to `/observatory` |
+| `observatory/MetricCard.tsx` | MetricCard | v3.0.0 | Sparkline, delta, StatusBadge, agency — client, dynamically imported |
+| `observatory/MetricChart.tsx` | MetricChart | v3.0.0 | Full Recharts chart with Area, ReferenceLine, Brush — `ssr: false` |
+| `observatory/YearScrubber.tsx` | YearScrubber | v3.0.0 | Range input, `accent-emerald-500`, controls baseline year |
+| `observatory/LifetimeWidget.tsx` | LifetimeWidget | v3.0.0 | Birth year → personalised metric deltas, client-only, no data stored |
+| `observatory/StatusBadge.tsx` | StatusBadge | v3.0.0 | Safe/Caution/Critical pill from `getThresholdStatus()` |
+| `observatory/DataProvenancePanel.tsx` | DataProvenancePanel | v3.0.0 | Source agency, dataset, last fetched, methodology link |
+
 ## Library inventory (`src/lib/`)
 
 | File | Since | Purpose |
 |------|-------|---------|
 | `content.ts` | v1.0.0 | MDX loader for pillar articles — `getAllArticles()`, `getArticle()`, `PILLAR_META` |
+| `observatory.ts` | v3.0.0 | `MetricDataset` type, `METRIC_META`, `getThresholdStatus()`, `getDeltaFromYear()`, `getLatestValue()` |
 | `mediaConfig.ts` | v2.3.0 | All image/video URLs — `PILLAR_IMAGES`, `HERO_MEDIA_POOL`, `ARTICLE_MEDIA_TAGS`, `resolveCoverImage()`, `NATURE_VIDEO_SRC` |
 | `pages.ts` | v2.5.0 | MDX loader for `content/pages/` — `getStaticPage()`, `getAllPageSlugs()`, `PAGE_CONFIG` |
 
@@ -195,6 +233,121 @@ Current pages: `about.mdx` · `contribute.mdx` · `newsletter.mdx` · `privacy.m
 - Multilingual support (Next.js i18n routing)
 - Community article submissions with editorial review workflow
 - Personal carbon footprint calculator widget
+
+---
+
+## Observatory — three-layer data architecture
+
+The Observatory uses three layers. Each has a defined max staleness and powers specific UI components. **Do not collapse these into a single build-time approach** — the Route Handler (Layer 2) is essential for current value accuracy. MetricCard current value and StatusBadge must use Layer 2, not Layer 1.
+
+```
+Layer 1  build-time static     /public/data/*.json via CDN
+         max staleness: 31 days (refreshed monthly by Layer 3)
+         powers: trend charts, sparklines, YearScrubber, LifetimeWidget
+
+Layer 2  Route Handler          /api/observatory/[metric]/route.ts
+         on-demand, edge-cached 24h (s-maxage=86400, stale-while-revalidate=3600)
+         falls back to Layer 1 with { fallback: true } on upstream failure
+         powers: MetricCard "current value" badge, StatusBadge
+
+Layer 3  GitHub Action cron     .github/workflows/refresh-data.yml
+         runs 1st of each month 02:00 UTC, re-runs fetch-data.ts, commits JSON
+         triggers Vercel rebuild — keeps Layer 1 historical series current
+```
+
+### Staleness per UI component
+
+| UI component | Data source | Max staleness |
+|---|---|---|
+| Trend chart (full history) | Layer 1 static JSON | 31 days |
+| Sparkline on MetricCard | Layer 1 static JSON | 31 days |
+| YearScrubber / LifetimeWidget | Layer 1 static JSON | 31 days |
+| Current value badge | Layer 2 Route Handler | 24 hours |
+| StatusBadge (Safe/Caution/Critical) | Layer 2 Route Handler | 24 hours |
+| DataProvenancePanel "last updated" | Layer 2 + Layer 1 `lastFetched` | 24 hours |
+
+### Layer 2 Route Handler response shape
+
+```ts
+// GET /api/observatory/[metric]
+{ year: number; value: number; unit: string; agency: string; fallback?: true; }
+// fallback: true only when served from static JSON (upstream unavailable)
+```
+
+---
+
+## Observatory — data sources (all public domain, no API key required)
+
+| Metric | Agency | URL |
+|--------|--------|-----|
+| Temperature anomaly | NASA GISS | `https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.csv` |
+| Atmospheric CO₂ | NOAA | `https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_annmean_mlo.csv` |
+| Sea level rise | NASA JPL | `https://sealevel.nasa.gov/ftp/txt/MSL_Seasonal_v3.1.txt` |
+| Arctic sea ice | NSIDC | `https://noaadata.apps.nsidc.org/NOAA/G02135/north/monthly/data/N_09_extent_v3.0.csv` |
+| Deforestation | Global Forest Watch | GFW Open Data API (fallback: hardcoded series) |
+| Glacier mass balance | WGMS | `https://wgms.ch/downloads/` (fallback: hardcoded series) |
+
+---
+
+## Observatory — MetricDataset schema (`public/data/*.json`)
+
+```ts
+interface MetricDataset {
+  id: string;
+  label: string;
+  unit: string;
+  source: {
+    agency: string;
+    dataset: string;
+    url: string;
+    methodology: string;
+    lastFetched: string;   // ISO timestamp of last successful fetch
+  };
+  thresholds: { safe: number; caution: number; critical: number; };
+  series: Array<{ year: number; value: number | null; }>;
+}
+```
+
+---
+
+## Observatory — METRIC_META (in `src/lib/observatory.ts`)
+
+```ts
+export const METRIC_META = {
+  temperature:   { label: 'Temperature Anomaly', unit: '°C',      icon: '🌡️', agency: 'NASA GISS',           thresholds: { safe: 1.0,    caution: 1.5,    critical: 2.0    }, higherIsBetter: false },
+  co2:           { label: 'Atmospheric CO₂',     unit: 'ppm',     icon: '💨', agency: 'NOAA',                thresholds: { safe: 350,    caution: 400,    critical: 450    }, higherIsBetter: false },
+  'sea-level':   { label: 'Sea Level Rise',       unit: 'mm',      icon: '🌊', agency: 'NASA JPL',            thresholds: { safe: 50,     caution: 100,    critical: 150    }, higherIsBetter: false },
+  'sea-ice':     { label: 'Arctic Sea Ice',       unit: 'M km²',   icon: '🧊', agency: 'NSIDC',              thresholds: { safe: 6.0,    caution: 4.5,    critical: 3.5    }, higherIsBetter: true  },
+  deforestation: { label: 'Deforestation Rate',   unit: 'Mha/yr',  icon: '🌳', agency: 'Global Forest Watch', thresholds: { safe: 8,      caution: 12,     critical: 15     }, higherIsBetter: false },
+  glaciers:      { label: 'Glacier Mass Balance', unit: 'mm w.e.', icon: '⛰️', agency: 'WGMS',               thresholds: { safe: -10000, caution: -20000, critical: -28000 }, higherIsBetter: true  },
+};
+```
+
+---
+
+## Observatory — component conventions
+
+- **All chart components** must be `'use client'` and dynamically imported (`next/dynamic`, `ssr: false`) — Recharts does not support SSR
+- **`ObservatoryFAB`**: `fixed bottom-6 right-6 z-50 lg:hidden` — mobile only, links to `/observatory`
+- **`MetricCard`**: client — sparkline via `<LineChart>`, no axes, thin line; delta from `baselineYear` prop; emerald/amber/red line colour based on status
+- **`MetricChart`**: dynamically imported; `<ComposedChart>` with `<Area>`, `<ReferenceLine>` per threshold, `<Brush>` for zoom
+- **`YearScrubber`**: `<input type="range">` with `accent-emerald-500`; state lives in parent Dashboard, passed down
+- **`LifetimeWidget`**: client-side only — birth year input, uses `getDeltaFromYear()`, never persists or transmits data
+- **`StatusBadge`**: derives status via `getThresholdStatus()` from `observatory.ts`
+- **Observatory pages**: use `bg-slate-950` dark layout independently of site theme toggle
+
+---
+
+## Observatory — Navbar integration
+
+**Desktop:** teal pill between nav links and ThemeToggle:
+```tsx
+<Link href="/observatory" className="hidden lg:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-brand-400/10 border border-brand-400/30 text-brand-400 hover:bg-brand-400/20 transition-colors">
+  🛰️ Observatory
+</Link>
+```
+
+**Mobile:** `<ObservatoryFAB />` rendered in `layout.tsx` inside `<ThemeProvider>`, after `<Footer />`.
 
 ---
 
@@ -235,6 +388,118 @@ applicable item in the closing gate at the bottom of this section is checked.
 
 The rules below are grounded in real bugs found and fixed in this project. Each one maps to
 a specific past failure — they are not theoretical.
+
+---
+
+### Design system
+
+**Colour palette — use tokens, never raw hex or non-token Tailwind shades**
+- All colours must come from the EarthPulse design token set defined in `globals.css` `@theme` block. Do not use arbitrary hex values or one-off Tailwind shades that aren't part of the palette.
+- Approved brand palette: `brand-50` through `brand-900` (teal-green, `#1D9E75` base).
+- Status colours (Observatory and callouts): `emerald-*` (safe), `amber-*` (caution), `red-*` (critical).
+- Surface colours for cards and backgrounds: `gray-50 / gray-100 / gray-200` (light mode), `gray-800 / gray-900 / gray-950` (dark mode).
+- `slate-*` shades are NOT part of the EarthPulse palette. If you reach for `slate-900`, `slate-950`, or any `slate-*` colour, stop — you are about to hardcode a dark-only surface.
+
+**Typography**
+- All text inherits the Inter font via `--font-inter` CSS variable set on `<html>`. Never set `font-family` inline.
+- Body text: `text-gray-900 dark:text-gray-100` (via `body` rule in `globals.css`).
+- Heading hierarchy: `text-gray-900 dark:text-white` for `<h1>`–`<h3>`; `text-gray-600 dark:text-gray-300` for descriptive sub-headings.
+- Secondary/metadata text: `text-gray-500 dark:text-gray-400` or `text-gray-400 dark:text-gray-500`.
+
+**Shared CSS classes — use these before writing bespoke styles**
+
+| Class | When to use |
+|---|---|
+| `.card` | Any white bordered card — includes dark mode automatically |
+| `.btn-primary` | Filled teal CTA button |
+| `.btn-outline` | Outlined teal secondary button |
+| `.tag` | Small pill label for content tags |
+| `.nav-link` | Navigation anchor with hover colour |
+| `.section-title` | `text-2xl md:text-3xl font-bold tracking-tight` heading |
+| `.prose-custom` | MDX article body — applies `prose prose-gray` with dark mode |
+
+**Component reuse**
+- Before creating a new component, search `src/components/` for something that already solves the problem. Prefer extending an existing component over creating a parallel one.
+- New UI primitives belong in `src/components/ui/`. New article-specific components go in `src/components/article/`. Page-specific interactive sections go in the page's own directory.
+
+**Recharts / SVG inline colours**
+- Recharts chart props (`stroke`, `fill`, `tick.fill`, etc.) are inline values — CSS utility classes do not apply to SVG elements.
+- ALWAYS use `useTheme()` from `next-themes` to detect `resolvedTheme` and conditionally set chart colours.
+- Initialise the detected theme to `false` / light-mode values in `useState` to avoid hydration mismatch. Update in `useEffect`.
+- See `MetricChart.tsx` for the canonical pattern.
+
+---
+
+### Theme integrity — light and dark mode must both work from the first commit
+
+This section exists because the Observatory feature shipped with hardcoded dark-only colours, then required a full redesign when the bug was discovered. **That sequence must never repeat.**
+
+**The cardinal rule — light-mode first, dark variant always paired**
+
+Every new component must be authored for light mode first. Dark mode is added as `dark:` variant classes alongside the light value. There is no such thing as a "dark-mode-only component" on EarthPulse — every component must look correct in both themes.
+
+```tsx
+// ❌ Wrong — hardcoded dark only; breaks in light mode
+<div className="bg-slate-900 text-white border border-slate-700">
+
+// ✅ Correct — explicit light value, dark: counterpart for every token
+<div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-100 dark:border-gray-700">
+```
+
+**Banned patterns — these caused the Observatory regression**
+
+| Pattern | Why it is banned | Correct alternative |
+|---|---|---|
+| `bg-slate-950` without `dark:` | Only visible in dark mode | `bg-white dark:bg-gray-950` |
+| `text-white` without light-mode value | Invisible on white background | `text-gray-900 dark:text-white` |
+| `bg-slate-900` without `dark:` | Hardcoded dark surface | `bg-gray-50 dark:bg-gray-900` |
+| `text-slate-400` without `dark:` | Pale text invisible in light mode | `text-gray-500 dark:text-gray-400` |
+| `class="dark"` on a wrapper div to force dark | Breaks theme toggle; makes component an island | Use `dark:` variants instead |
+| Hiding Navbar/Footer via `usePathname` in layout | Disconnects feature from site shell | Feature integrates with standard layout |
+
+**Forcing dark mode on a subtree is never the right fix**
+
+If a component only looks correct in dark mode, the fix is to add light-mode styles — not to wrap the component in `<div className="dark">`. Forcing dark mode on a subtree:
+1. Breaks the user's theme preference
+2. Makes the feature look disconnected from the rest of the site
+3. Causes the Navbar and Footer to appear in the wrong theme
+4. Is always a symptom of missing light-mode styles, not a solution
+
+**New feature pages must integrate with the site shell**
+
+Every new page must include the standard EarthPulse Navbar and Footer. These are rendered by `src/app/layout.tsx` — they are present on all pages automatically. Do not modify `layout.tsx`, `Navbar.tsx`, or `Footer.tsx` to hide or alter the site shell for a specific feature page. If a page needs a special header, place it INSIDE the page's `<main>` content area, not as a replacement for the global Navbar.
+
+Exception: a full-screen overlay (e.g., a modal) that temporarily covers the shell is acceptable, but the shell must remain in the DOM and return when the overlay closes.
+
+**Theme toggle must work end-to-end on every new page**
+
+The `ThemeToggle` in the Navbar controls `next-themes`, which adds/removes the `dark` class from `<html>`. Our `@custom-variant dark (&:where(.dark, .dark *))` in `globals.css` activates all `dark:` Tailwind variants for any descendant of `.dark`. This means:
+
+- If your component uses only `dark:` prefixed Tailwind utilities, the theme toggle will work automatically ✅
+- If your component uses hardcoded dark colours (`slate-900`, `gray-950`, etc.) without a light-mode counterpart, the theme toggle will have no effect on those elements ❌
+
+---
+
+### Site integration — new pages and features
+
+**Standard layout (Navbar + Footer) is mandatory**
+- All pages must render with the site Navbar at the top and the site Footer at the bottom. These are provided automatically by `src/app/layout.tsx`.
+- Do not suppress, hide, override, or path-detect to conditionally render the Navbar or Footer.
+- If a feature page needs its own navigation element (e.g., Observatory's "← Back" breadcrumb), add it as additional content INSIDE the page, not as a replacement for the global Navbar.
+
+**Page-level background**
+- New pages inherit `bg-white dark:bg-gray-950` from the body (defined in `globals.css`). Do not override the page root background unless the page has a deliberate hero section with its own background (e.g., a gradient hero banner).
+- Exception: a hero section within the page may use `bg-gradient-to-b from-gray-50 dark:from-gray-900` or similar to create visual hierarchy — but only for the hero area, not the whole page.
+
+**Existing `.card` utility for cards and panels**
+- Use the `.card` CSS class for standard information panels. It provides `bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800` automatically with hover states.
+- Custom panel styles (Observatory chart container, DataProvenancePanel) should follow the same `bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700` pattern.
+
+**The theme toggle must visually affect every element on a new page**
+- After building a feature, toggle the theme (click the Navbar moon/sun icon). Every text block, card, background, chart, input, and border on the page must change correctly.
+- If any element does not change: it is using a hardcoded colour. Fix by adding the `dark:` variant.
+
+---
 
 ---
 
@@ -314,12 +579,34 @@ a specific past failure — they are not theoretical.
 This checklist must be satisfied before a feature is marked complete. It is the equivalent of
 the versioning checklist — both are required.
 
+**Design system**
+- [ ] No raw hex values or `slate-*` colours used — all colours from the approved palette (`brand-*`, `gray-*`, `emerald-*`, `amber-*`, `red-*`)
+- [ ] No inline `font-family` or `font-size` styles — typography inherits from `--font-inter` and Tailwind utilities
+- [ ] Existing shared classes used where applicable (`.card`, `.btn-primary`, `.btn-outline`, `.tag`, `.nav-link`, `.section-title`)
+- [ ] No duplicate component created when an existing one could be extended
+- [ ] Recharts/SVG charts use `useTheme()` for inline colour props — no hardcoded chart colours
+
+**Theme integrity — the most critical gate**
+- [ ] Every new component has been opened in **light mode** — all text readable, all backgrounds correct, no invisible elements
+- [ ] Every new component has been opened in **dark mode** — all text readable, all backgrounds correct, no invisible elements
+- [ ] The Navbar theme toggle visually changes every element on every new page in both directions
+- [ ] Zero `slate-*` or `gray-9*` hardcoded values without a paired light-mode class
+- [ ] Zero `text-white` or `text-gray-100` without a paired `dark:` class to make it theme-conditional
+- [ ] No `<div className="dark">` or `<div className="dark contents">` wrappers used to force dark mode — `dark:` variants used instead
+- [ ] No `usePathname` check in `Navbar.tsx` or `Footer.tsx` to conditionally hide/restyle them
+
+**Site integration**
+- [ ] New pages render with the standard EarthPulse Navbar and Footer — not replaced, not hidden
+- [ ] New pages have no `min-h-screen` with a hardcoded background on the outer `<div>` — page inherits body background
+- [ ] No modifications to `src/app/layout.tsx` that conditionally exclude the Navbar or Footer
+- [ ] The page is navigable from within the site (Navbar links or explicit cross-links)
+- [ ] `generateMetadata()` is exported from every new page
+
 **Performance**
 - [ ] Every `<Image fill>` has `sizes` prop set
 - [ ] `priority` is only on above-the-fold LCP images; all others omit it or pass `priority={false}`
 - [ ] No raw `<img>` tags for external URLs — all go through `next/image`
 - [ ] New external image domains added to `next.config.ts` `remotePatterns` with a comment
-- [ ] No `priority` image fetches happen while a video is already covering the same area
 - [ ] No unused `useRef`, `useState`, or `useEffect` remain in any touched file
 - [ ] `npm run build` passes with zero errors and zero warnings
 
@@ -334,10 +621,39 @@ the versioning checklist — both are required.
 - [ ] Meaningful images: `alt` describes image content (not filename, title, or context label)
 - [ ] Icon-only buttons have `aria-label` and `title`; both update dynamically if state-dependent
 - [ ] Any animation or autoplay video respects `prefers-reduced-motion` at both CSS and JS layers
-- [ ] Dark mode verified in both light and dark — no hardcoded colours that only work in one mode
 - [ ] Page heading hierarchy is logical (one `<h1>`, sequential `<h2>`/`<h3>`)
 - [ ] New client components do not call browser APIs during render (SSR-safe)
 - [ ] `npm run lint` passes with zero errors
+
+---
+
+### Post-build site functional integrity check
+
+Run this after every feature build to verify the whole site — not just the new feature — is intact.
+
+```bash
+npm run build
+# Must exit 0. All pages generated. No TypeScript errors.
+```
+
+Then open the dev server and verify:
+
+| Check | How to verify |
+|---|---|
+| Homepage loads | `/` — hero video/image, stats bar, pillar grid, featured articles visible |
+| Pillar pages load | `/our-planet` — PageHero, article grid, dark Navbar present |
+| Article pages load | `/our-planet/oceans` — PageHero, breadcrumb, article body, tags, callouts |
+| Tag pages load | `/tag/oceans` — article list visible |
+| Static pages load | `/about`, `/contribute`, `/newsletter`, `/privacy` — Navbar, Footer, content visible |
+| Observatory loads | `/observatory` — metric cards visible, YearScrubber functional |
+| Observatory deep-dive | `/observatory/co2` — chart, provenance, related articles visible |
+| **Light mode** | Toggle to light → every page correct, no invisible text, no dark-only panels |
+| **Dark mode** | Toggle to dark → every page correct, no white panels on dark background |
+| Theme toggle | Click Navbar sun/moon → page immediately responds, no elements stay frozen |
+| Navbar present | All pages have EarthPulse Navbar with logo, links, Observatory pill, ThemeToggle |
+| Footer present | All pages have EarthPulse Footer with Explore/Topics/About columns |
+| Mobile responsive | Hamburger menu works on small viewport; Observatory FAB visible bottom-right |
+| No console errors | Browser console shows zero errors and zero hydration warnings |
 
 ---
 
@@ -443,7 +759,8 @@ git push
 ## Commands
 
 ```bash
-npm run dev      # local dev server at http://localhost:3000
-npm run build    # production build
-npm run lint     # ESLint
+npm run dev          # local dev server at http://localhost:3000
+npm run fetch-data   # manually refresh Observatory JSON datasets (also runs via prebuild)
+npm run build        # production build — runs fetch-data first via prebuild
+npm run lint         # ESLint
 ```
