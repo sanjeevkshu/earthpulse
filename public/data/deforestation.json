@@ -7,7 +7,7 @@
     "dataset": "Hansen/UMD/Google/USGS/NASA Tree Cover Loss",
     "url": "https://www.globalforestwatch.org",
     "methodology": "https://www.science.org/doi/10.1126/science.1244693",
-    "lastFetched": "2026-06-07T10:35:24.093Z"
+    "lastFetched": "2026-06-07T10:54:48.611Z"
   },
   "thresholds": {
     "safe": 8,

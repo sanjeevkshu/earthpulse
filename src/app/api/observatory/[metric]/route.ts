@@ -42,12 +42,17 @@ async function fetchLatestTemperature(): Promise<{ year: number; value: number }
   const yrCol  = headers.indexOf('Year');
   const annCol = headers.indexOf('J-D');
   if (yrCol < 0 || annCol < 0) throw new Error('Columns not found');
-  // Walk from end to find last non-**** row
+  // Walk from end to find last row with a real numeric J-D value.
+  // Skip rows where J-D is '****', whitespace-only, or any non-numeric string
+  // (incomplete years may have whitespace rather than '****' on Vercel's live fetch).
   for (let i = lines.length - 1; i > headerIdx; i--) {
-    const cols = lines[i].split(',');
-    const yr  = parseInt(cols[yrCol]);
-    const val = cols[annCol]?.trim();
-    if (!isNaN(yr) && val && val !== '****') return { year: yr, value: parseFloat(val) };
+    const cols   = lines[i].split(',');
+    const yr     = parseInt(cols[yrCol]);
+    const rawVal = cols[annCol]?.trim();
+    const numVal = parseFloat(rawVal ?? '');
+    if (!isNaN(yr) && rawVal && rawVal !== '****' && !isNaN(numVal)) {
+      return { year: yr, value: numVal };
+    }
   }
   throw new Error('No valid row found');
 }
@@ -171,6 +176,11 @@ export async function GET(
 
   try {
     const { year, value } = await getLatest(id);
+    // Guard: NaN (from incomplete-year rows like whitespace-only J-D columns)
+    // serialises to null in JSON and crashes MetricCard. Fall back to static JSON.
+    if (isNaN(value) || value === null) {
+      throw new Error(`getLatest returned invalid value (${value}) for ${id}`);
+    }
     const body: LivePoint = { year, value, unit: meta.unit, agency: meta.agency };
     return NextResponse.json(body, {
       headers: { 'Cache-Control': CACHE_HEADER },

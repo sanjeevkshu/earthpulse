@@ -7,7 +7,7 @@
     "dataset": "Sea Ice Index v3.0 (cached)",
     "url": "https://noaadata.apps.nsidc.org/NOAA/G02135/north/monthly/data/N_09_extent_v3.0.csv",
     "methodology": "https://nsidc.org/data/g02135",
-    "lastFetched": "2026-06-07T10:35:26.060Z"
+    "lastFetched": "2026-06-07T10:54:50.092Z"
   },
   "thresholds": {
     "safe": 6,

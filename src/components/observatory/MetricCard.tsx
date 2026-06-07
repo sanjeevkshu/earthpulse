@@ -31,7 +31,13 @@ export default function MetricCard({ metricId, dataset, baselineYear }: Props) {
     return () => { cancelled = true; };
   }, [metricId]);
 
-  const current = live ?? (staticVal ? { ...staticVal, unit: meta.unit, agency: meta.agency } : null);
+  // Reject live values that are null or NaN — the Route Handler guards against this
+  // but the API response JSON might still carry null (NaN serialises to null in JSON).
+  // Fall back to static dataset value in that case so .toFixed() never throws.
+  const liveValid = live !== null && live.value !== null && !isNaN(live.value as number);
+  const current   = liveValid
+    ? live!
+    : (staticVal ? { ...staticVal, unit: meta.unit, agency: meta.agency } : null);
   if (!current) return null;
 
   const status    = getThresholdStatus(metricId, current.value);
