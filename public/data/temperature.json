@@ -7,7 +7,7 @@
     "dataset": "GISTEMP v4 (cached)",
     "url": "https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.csv",
     "methodology": "https://data.giss.nasa.gov/gistemp/faq/",
-    "lastFetched": "2026-08-01T05:33:28.431Z"
+    "lastFetched": "2026-09-01T07:38:28.003Z"
   },
   "thresholds": {
     "safe": 1,
