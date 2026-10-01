@@ -7,7 +7,7 @@
     "dataset": "GMSL v3.1 (cached)",
     "url": "https://sealevel.nasa.gov/ftp/txt/MSL_Seasonal_v3.1.txt",
     "methodology": "https://sealevel.nasa.gov/understanding-sea-level/regional-sea-level/overview",
-    "lastFetched": "2026-09-01T07:38:27.893Z"
+    "lastFetched": "2026-10-01T08:40:12.435Z"
   },
   "thresholds": {
     "safe": 50,
