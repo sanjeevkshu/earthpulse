@@ -7,7 +7,7 @@
     "dataset": "Fluctuations of Glaciers (FoG) — Cumulative mass balance",
     "url": "https://wgms.ch/global-glacier-state/",
     "methodology": "https://wgms.ch/products_fog/",
-    "lastFetched": "2026-10-01T08:40:12.333Z"
+    "lastFetched": "2026-11-01T09:00:27.238Z"
   },
   "thresholds": {
     "safe": -10000,

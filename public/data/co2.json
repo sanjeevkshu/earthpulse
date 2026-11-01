@@ -7,7 +7,7 @@
     "dataset": "Mauna Loa CO₂ Annual Mean",
     "url": "https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_annmean_mlo.csv",
     "methodology": "https://gml.noaa.gov/ccgg/trends/data.html",
-    "lastFetched": "2026-10-01T08:40:12.524Z"
+    "lastFetched": "2026-11-01T09:00:27.506Z"
   },
   "thresholds": {
     "safe": 350,
